@@ -16,8 +16,8 @@ COPY . .
 # Збираємо TypeScript у JavaScript
 RUN npm run build
 
-# Відкриваємо порт 3000
-EXPOSE 3000
+# Відкриваємо порт 9000
+EXPOSE 9000
 
 # Запускаємо у продакшн режимі
 CMD ["node", "dist/main.js"]
