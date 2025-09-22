@@ -1,4 +1,10 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpStatus, Logger } from "@nestjs/common";
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpStatus,
+  Logger,
+} from "@nestjs/common";
 import { Response } from "express";
 import { PrismaClientKnownRequestError } from "generated/prisma/runtime/library";
 
@@ -20,7 +26,9 @@ export class PrismaExceptionFilter implements ExceptionFilter {
         break;
 
       case "P2025":
-        this.logger.error(`Some resources were not found: ${exception.message}`);
+        this.logger.error(
+          `Some resources were not found: ${exception.message}`,
+        );
         response.status(HttpStatus.NOT_FOUND).json({
           statusCode: HttpStatus.NOT_FOUND,
           message: `Some resources were not found: ${exception.message}`,
