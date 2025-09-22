@@ -13,3 +13,142 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  ROOT
+  ADMIN
+  USER
+}
+
+model User {
+  id Int @id @default(autoincrement())
+
+  firstName String @map("first_name")
+  lastName  String @map("last_name")
+  email     String @unique
+  role      Role   @default(USER)
+  password  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model DosageUnit {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  products Product[]
+
+  @@map("dosage_units")
+}
+
+model ActiveIngredient {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  products Product[]
+
+  @@map("active_ingredients")
+}
+
+model Product {
+  id      Int    @id @default(autoincrement())
+  name    String @unique
+  barcode String @unique
+  dosage  Float
+
+  dosageUnit   DosageUnit @relation(fields: [dosageUnitId], references: [id])
+  dosageUnitId Int        @map("dosage_unit_id")
+
+  activeIngredient   ActiveIngredient @relation(fields: [activeIngredientId], references: [id])
+  activeIngredientId Int              @map("active_ingredient_id")
+
+  batches    Batch[]
+  categories ProductCategory[]
+  forms      ProductForm[]
+
+  @@map("products")
+}
+
+model Storage {
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  description String
+  temperature Float?
+
+  batches StorageBatch[]
+
+  @@map("storages")
+}
+
+model Batch {
+  id Int @id @default(autoincrement())
+
+  batchNumber     String   @unique @map("batch_number")
+  description     String?
+  // qty             Int
+  manufactureDate DateTime @map("manufacture_date")
+  expirationDate  DateTime @map("expiration_date")
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @map("product_id")
+
+  storages StorageBatch[]
+
+  @@map("batches")
+}
+
+model StorageBatch {
+  storage   Storage @relation(fields: [storageId], references: [id])
+  storageId Int     @map("storage_id")
+
+  batch   Batch @relation(fields: [batchId], references: [id])
+  batchId Int   @map("batch_id")
+
+  qty Int
+
+  @@unique([storageId, batchId])
+  @@map("storage_batches")
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  products ProductCategory[]
+
+  @@map("categories")
+}
+
+model DrugForm {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  products ProductForm[]
+
+  @@map("drug_forms")
+}
+
+model ProductCategory {
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int      @map("category_id")
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @map("product_id")
+
+  @@unique([categoryId, productId])
+  @@map("product_categories")
+}
+
+model ProductForm {
+  form   DrugForm @relation(fields: [formId], references: [id])
+  formId Int      @map("form_id")
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int     @map("product_id")
+
+  @@unique([formId, productId])
+  @@map("product_forms")
+}
