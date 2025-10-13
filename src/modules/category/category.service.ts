@@ -9,11 +9,8 @@ export class CategoryService {
   async create(createCategoryDto: CreateCategoryDto) {
     const { name } = createCategoryDto;
 
-    const category = await this.prisma.category.findUnique({
-      where: { name },
-    });
+    await this.findByNameOrThrow(name);
 
-    if (category) throw new ConflictException("Category is already existed");
     const newCategory = await this.prisma.category.create({
       data: { name },
     });
@@ -28,16 +25,17 @@ export class CategoryService {
   }
 
   async findOne(id: number) {
-    const category = await this.prisma.category.findUnique({ where: { id } });
-    if (!category) throw new ConflictException("Category not found");
-    return category;
+    return await this.findByIdOrThrow(id);
   }
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
     const { name } = updateCategoryDto;
-    const category = await this.findByIdOrThrow(id);
+    await this.findByIdOrThrow(id);
+
+    await this.findByNameOrThrow(name);
+
     const updatedCategory = await this.prisma.category.update({
-      where: { id: category.id },
+      where: { id },
       data: { name },
     });
     return updatedCategory;
@@ -49,10 +47,18 @@ export class CategoryService {
     return category;
   }
 
-  async remove(id: number) {
-    await this.findByIdOrThrow(id);
-    await this.prisma.category.delete({ where: { id } });
+  private async findByNameOrThrow(name: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { name },
+    });
 
-    return { message: `Category with id=${id} deleted successfully` };
+    if (category) throw new ConflictException("Category is already existed");
+    return category;
   }
+  // async remove(id: number) {
+  //   await this.findByIdOrThrow(id);
+  //   await this.prisma.category.delete({ where: { id } });
+
+  //   return { message: `Category with id=${id} deleted successfully` };
+  // }
 }
