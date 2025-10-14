@@ -4,7 +4,7 @@ import {
   Post,
   Body,
   Param,
-  Delete,
+  // Delete,
   // Query,
   Put,
   ParseIntPipe,
