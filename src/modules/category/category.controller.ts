@@ -5,13 +5,15 @@ import {
   Body,
   Param,
   // Delete,
-  // Query,
+  Query,
   Put,
   ParseIntPipe,
 } from "@nestjs/common";
 import { CategoryService } from "./category.service";
 import { CreateCategoryDto } from "./dto/create-category.dto";
 import { UpdateCategoryDto } from "./dto/update-category.dto";
+// import { PaginationDto } from "../pageable/dto/pagination.dto";
+import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 // import { FindCategoryDto } from "./dto/find-category.dto";
 @Controller("categories")
 export class CategoryController {
@@ -22,11 +24,18 @@ export class CategoryController {
     return this.categoryService.create(createCategoryDto);
   }
 
+  // @Get()
+  // findAll() {
+  //   return this.categoryService.findAll();
+  // }
+  // @Get()
+  // async getAll(@Query() pagination: PaginationDto) {
+  //   return this.categoryService.findAll(pagination);
+  // }
   @Get()
-  findAll() {
-    return this.categoryService.findAll();
+  async findAll(@Query() query: QueryPageOptionsDto) {
+    return this.categoryService.findAll(query);
   }
-
   @Get(":id")
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.categoryService.findOne(id);

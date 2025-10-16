@@ -2,10 +2,15 @@ import { ConflictException, Injectable } from "@nestjs/common";
 import { CreateCategoryDto } from "./dto/create-category.dto";
 import { UpdateCategoryDto } from "./dto/update-category.dto";
 import { PrismaService } from "../database/prisma.service";
+import { PageableService } from "../pageable/pageable.service";
+import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 
 @Injectable()
 export class CategoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pageableService: PageableService, // ✅ додано інʼєкцію
+  ) {}
   async create(createCategoryDto: CreateCategoryDto) {
     const { name } = createCategoryDto;
 
@@ -18,10 +23,13 @@ export class CategoryService {
     return newCategory;
   }
 
-  async findAll() {
-    return this.prisma.category.findMany({
-      orderBy: { id: "asc" },
-    });
+  // async findAll() {
+  //   return this.prisma.category.findMany({
+  //     orderBy: { id: "asc" },
+  //   });
+  // }
+  async findAll(dto: QueryPageOptionsDto) {
+    return await this.pageableService.findAll("category", dto);
   }
 
   async findOne(id: number) {

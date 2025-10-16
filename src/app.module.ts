@@ -9,6 +9,7 @@ import { RolesGuard } from "./modules/auth/guards/roles.guard";
 import { CategoryModule } from "./modules/category/category.module";
 import { DosageUnitModule } from "./modules/dosage-unit/dosage-unit.module";
 import { ActiveIngredientModule } from './modules/active-ingredient/active-ingredient.module';
+import { PageableModule } from './modules/pageable/pageable.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ActiveIngredientModule } from './modules/active-ingredient/active-ingre
     CategoryModule,
     DosageUnitModule,
     ActiveIngredientModule,
+    PageableModule,
   ],
   controllers: [],
   providers: [
