@@ -6,6 +6,10 @@ import { UserModule } from "./modules/user/user.module";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtAuthGuard } from "./modules/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "./modules/auth/guards/roles.guard";
+import { CategoryModule } from "./modules/category/category.module";
+import { DosageUnitModule } from "./modules/dosage-unit/dosage-unit.module";
+import { ActiveIngredientModule } from "./modules/active-ingredient/active-ingredient.module";
+import { PageableModule } from "./modules/pageable/pageable.module";
 
 @Module({
   imports: [
@@ -13,6 +17,10 @@ import { RolesGuard } from "./modules/auth/guards/roles.guard";
     DatabaseModule,
     AuthModule,
     UserModule,
+    CategoryModule,
+    DosageUnitModule,
+    ActiveIngredientModule,
+    PageableModule,
   ],
   controllers: [],
   providers: [
@@ -20,7 +28,6 @@ import { RolesGuard } from "./modules/auth/guards/roles.guard";
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
-
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
