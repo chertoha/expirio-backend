@@ -8,7 +8,7 @@ export class QueryOptionsDto {
   @ApiPropertyOptional({ example: "cream", description: "Search query" })
   @IsString()
   @IsOptional()
-  search?: string = "";
+  search?: string;
 
   @ApiPropertyOptional({
     example: "name:asc",

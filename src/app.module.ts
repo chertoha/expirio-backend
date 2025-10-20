@@ -8,8 +8,8 @@ import { JwtAuthGuard } from "./modules/auth/guards/jwt-auth.guard";
 import { RolesGuard } from "./modules/auth/guards/roles.guard";
 import { CategoryModule } from "./modules/category/category.module";
 import { DosageUnitModule } from "./modules/dosage-unit/dosage-unit.module";
-import { ActiveIngredientModule } from './modules/active-ingredient/active-ingredient.module';
-import { PageableModule } from './modules/pageable/pageable.module';
+import { ActiveIngredientModule } from "./modules/active-ingredient/active-ingredient.module";
+import { PageableModule } from "./modules/pageable/pageable.module";
 
 @Module({
   imports: [
