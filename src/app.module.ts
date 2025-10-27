@@ -10,6 +10,8 @@ import { CategoryModule } from "./modules/category/category.module";
 import { DosageUnitModule } from "./modules/dosage-unit/dosage-unit.module";
 import { ActiveIngredientModule } from "./modules/active-ingredient/active-ingredient.module";
 import { PageableModule } from "./modules/pageable/pageable.module";
+import { DrugFormModule } from './modules/drug-form/drug-form.module';
+import { StoragesModule } from './modules/storages/storages.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { PageableModule } from "./modules/pageable/pageable.module";
     DosageUnitModule,
     ActiveIngredientModule,
     PageableModule,
+    DrugFormModule,
+    StoragesModule,
   ],
   controllers: [],
   providers: [
