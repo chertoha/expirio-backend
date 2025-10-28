@@ -12,6 +12,8 @@ import { ActiveIngredientModule } from "./modules/active-ingredient/active-ingre
 import { PageableModule } from "./modules/pageable/pageable.module";
 import { DrugFormModule } from './modules/drug-form/drug-form.module';
 import { StoragesModule } from './modules/storages/storages.module';
+import { ProductModule } from './modules/product/product.module';
+import { BatcheModule } from './modules/batche/batche.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { StoragesModule } from './modules/storages/storages.module';
     PageableModule,
     DrugFormModule,
     StoragesModule,
+    ProductModule,
+    BatcheModule,
   ],
   controllers: [],
   providers: [
