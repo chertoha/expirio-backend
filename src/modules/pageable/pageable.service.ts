@@ -21,7 +21,7 @@ export class PageableService {
 
     const orderBy = sort
       ? { [sort.split(":")[0]]: sort.split(":")[1] }
-      : { createdAt: "desc" };
+      : { id: "desc" };
 
     const prismaModel = this.prisma[model] as any;
 

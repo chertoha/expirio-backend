@@ -9,7 +9,8 @@ import {
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { CurrentUser } from "src/decorators/current-user.decorator";
 import { Public } from "src/decorators/public.decorator";
-import type { User } from "generated/prisma";
+import { type User } from "@prisma/client";
+// import type { User } from "generated/prisma";
 
 @Controller("auth")
 export class AuthController {

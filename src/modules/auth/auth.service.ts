@@ -3,8 +3,9 @@ import * as argon from "argon2";
 import { JwtService } from "@nestjs/jwt";
 import { JwtPayload } from "src/types/auth";
 import { Response } from "express";
-import { User } from "generated/prisma";
+// import { User } from "generated/prisma";
 import { UserService } from "../user/user.service";
+import { type User } from "@prisma/client";
 
 @Injectable()
 export class AuthService {
