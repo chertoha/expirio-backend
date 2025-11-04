@@ -1,7 +1,9 @@
 import * as argon from "argon2";
 import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { PrismaClient, Role } from "generated/prisma";
+import { PrismaClient, Role } from "@prisma/client";
+// import { PrismaClient } from "@prisma/client";
+// import { PrismaClient, Role } from "generated/prisma";
 
 @Injectable()
 export class PrismaService

@@ -12,12 +12,12 @@ export class CategoryService {
     private readonly pageableService: PageableService, // ✅ додано інʼєкцію
   ) {}
   async create(createCategoryDto: CreateCategoryDto) {
-    const { name } = createCategoryDto;
+    const { name, description } = createCategoryDto;
 
     await this.findByNameOrThrow(name);
 
     const newCategory = await this.prisma.category.create({
-      data: { name },
+      data: { name, description },
     });
 
     return newCategory;
@@ -37,14 +37,14 @@ export class CategoryService {
   }
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    const { name } = updateCategoryDto;
+    const { name, description } = updateCategoryDto;
     await this.findByIdOrThrow(id);
 
-    await this.findByNameOrThrow(name);
+    await this.findByNameOrThrow(name, id);
 
     const updatedCategory = await this.prisma.category.update({
       where: { id },
-      data: { name },
+      data: { name, description },
     });
     return updatedCategory;
   }
@@ -55,18 +55,26 @@ export class CategoryService {
     return category;
   }
 
-  private async findByNameOrThrow(name: string) {
+  private async findByNameOrThrow(name: string, selfId?: number) {
     const category = await this.prisma.category.findUnique({
-      where: { name },
+      where: { name, NOT: { id: selfId } },
     });
 
     if (category) throw new ConflictException("Category is already existed");
     return category;
   }
-  // async remove(id: number) {
-  //   await this.findByIdOrThrow(id);
-  //   await this.prisma.category.delete({ where: { id } });
 
-  //   return { message: `Category with id=${id} deleted successfully` };
-  // }
+  async remove(id: number) {
+    await this.findByIdOrThrow(id);
+
+    const assignedCategories = await this.prisma.productCategory.findMany({
+      where: { categoryId: id },
+    });
+    if (assignedCategories.length > 0)
+      throw new ConflictException(
+        `Cannot delete category. These products assigned to the category: ${assignedCategories.map(({ productId }) => productId).join(", ")}`,
+      );
+
+    return await this.prisma.category.delete({ where: { id } });
+  }
 }

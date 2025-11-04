@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  // output   = "../generated/prisma"
 }
 
 datasource db {
@@ -114,8 +114,9 @@ model StorageBatch {
 }
 
 model Category {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
 
   products ProductCategory[]
 

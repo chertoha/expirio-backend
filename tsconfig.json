@@ -23,7 +23,8 @@
     "noFallthroughCasesInSwitch": false,
 
     "paths": {
-      "src/*": ["./src/*"]
+      "src/*": ["./src/*"],
+      "generated/prisma": ["generated/prisma/index.d.ts"]
     }
   }
 }
