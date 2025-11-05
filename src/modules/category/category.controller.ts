@@ -8,6 +8,7 @@ import {
   Query,
   Put,
   ParseIntPipe,
+  Delete,
 } from "@nestjs/common";
 import { CategoryService } from "./category.service";
 import { CreateCategoryDto } from "./dto/create-category.dto";
@@ -49,8 +50,8 @@ export class CategoryController {
     return this.categoryService.update(id, updateCategoryDto);
   }
 
-  // @Delete(":id")
-  // remove(@Param("id", ParseIntPipe) id: number) {
-  //   return this.categoryService.remove(id);
-  // }
+  @Delete(":id")
+  async remove(@Param("id", ParseIntPipe) id: number) {
+    return await this.categoryService.remove(id);
+  }
 }

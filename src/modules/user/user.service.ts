@@ -6,8 +6,9 @@ import {
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { PrismaService } from "../database/prisma.service";
-import { Role, User } from "generated/prisma";
+// import { Role, User } from "generated/prisma";
 import { createNotFoundEntityMessage } from "src/utils/messages";
+import { Role, User } from "@prisma/client";
 
 @Injectable()
 export class UserService {
@@ -57,11 +58,11 @@ export class UserService {
     return user;
   }
 
-  async findOneById(id: number): Promise<User | null> {
+  async findOneById(id: number) {
     return await this.prisma.user.findUnique({ where: { id } });
   }
 
-  async findOneByEmail(email: string): Promise<User | null> {
+  async findOneByEmail(email: string) {
     return await this.prisma.user.findUnique({ where: { email } });
   }
 }

@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
-import { DrugFormService } from './drug-form.service';
-import { DrugFormController } from './drug-form.controller';
+import { Module } from "@nestjs/common";
+import { DrugFormService } from "./drug-form.service";
+import { DrugFormController } from "./drug-form.controller";
 
 @Module({
   controllers: [DrugFormController],
