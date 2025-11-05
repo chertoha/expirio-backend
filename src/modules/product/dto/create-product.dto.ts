@@ -5,7 +5,6 @@ import {
   MaxLength,
   IsInt,
 } from "class-validator";
-// import { Type } from "class-transformer";
 
 export class CreateProductDto {
   @IsString()
@@ -19,11 +18,9 @@ export class CreateProductDto {
   @IsNumber()
   dosage: number;
 
-  //   @Type(() => Number)
   @IsInt()
   dosageUnitId: number;
 
-  //   @Type(() => Number)
   @IsInt()
   activeIngredientId: number;
 }

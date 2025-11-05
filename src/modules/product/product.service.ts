@@ -36,8 +36,8 @@ export class ProductService {
   async update(id: number, updateProductDto: UpdateProductDto) {
     const { name, barcode, dosage, dosageUnitId, activeIngredientId } =
       updateProductDto;
-    const existingStorage = await this.findByIdOrThrow(id);
-    if (name && name !== existingStorage.name)
+    const existingProduct = await this.findByIdOrThrow(id);
+    if (name && name !== existingProduct.name)
       await this.findByNameOrThrow(name);
 
     const updateProduct = await this.prisma.product.update({

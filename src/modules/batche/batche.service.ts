@@ -43,8 +43,8 @@ export class BatcheService {
   async update(id: number, updateBatcheDto: UpdateBatcheDto) {
     const { batchNumber, description, manufactureDate, expirationDate } =
       updateBatcheDto;
-    const existingStorage = await this.findByIdOrThrow(id);
-    if (batchNumber && batchNumber !== existingStorage.batchNumber)
+    const existingBatch = await this.findByIdOrThrow(id);
+    if (batchNumber && batchNumber !== existingBatch.batchNumber)
       await this.findByBatchNumberOrThrow(batchNumber);
 
     const updateBatche = await this.prisma.batch.update({
