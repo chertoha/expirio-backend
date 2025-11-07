@@ -76,6 +76,7 @@ CREATE TABLE "storage_batches" (
 CREATE TABLE "categories" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "description" TEXT,
 
     CONSTRAINT "categories_pkey" PRIMARY KEY ("id")
 );
@@ -162,4 +163,3 @@ ALTER TABLE "product_forms" ADD CONSTRAINT "product_forms_form_id_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "product_forms" ADD CONSTRAINT "product_forms_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
