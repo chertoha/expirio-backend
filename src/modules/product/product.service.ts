@@ -1,11 +1,24 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { PrismaService } from "../database/prisma.service";
+import { AssignCategoryDto } from "./dto/assign-category.dto";
+import { CategoryService } from "../category/category.service";
+import { FindAssignCategoryQueryDto } from "./dto/find-assign-category-query.dto";
+import { DeleteAssignedCategoryDto } from "./dto/delete-assigned-category.dto";
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly categoryService: CategoryService,
+  ) {}
+
   async create(createProductDto: CreateProductDto) {
     const { name, barcode, dosage, dosageUnitId, activeIngredientId } =
       createProductDto;
@@ -64,4 +77,53 @@ export class ProductService {
   // remove(id: number) {
   //   return `This action removes a #${id} product`;
   // }
+
+  async assignCategory(assignCategoryDto: AssignCategoryDto) {
+    const { productIds, categoryId } = assignCategoryDto;
+
+    const existingProducts = await this.prisma.product.findMany({
+      where: { id: { in: productIds } },
+    });
+    if (existingProducts.length !== productIds.length)
+      throw new NotFoundException(`Some products don't exist, ids`);
+
+    await this.categoryService.findByIdOrThrow(categoryId);
+
+    const assignedData = productIds.map(productId => ({
+      productId,
+      categoryId,
+    }));
+
+    return await this.prisma.productCategory.createMany({ data: assignedData });
+  }
+
+  async findAssignedCategories(queryDto: FindAssignCategoryQueryDto) {
+    const { categoryId, productId } = queryDto;
+
+    // if ((categoryId && !productId) || (!categoryId && productId))
+    //   throw new BadRequestException("Needed both categoryId and productId");
+
+    return await this.prisma.productCategory.findMany({
+      where: { ...(categoryId && categoryId && { categoryId, productId }) },
+      include: { product: true, category: true },
+    });
+  }
+
+  async deleteAssignedCategory(
+    deleteAssignedCategoryDto: DeleteAssignedCategoryDto,
+  ) {
+    const { productIds, categoryId } = deleteAssignedCategoryDto;
+
+    const existingProducts = await this.prisma.product.findMany({
+      where: { id: { in: productIds } },
+    });
+    if (existingProducts.length !== productIds.length)
+      throw new NotFoundException(`Some products don't exist, ids`);
+
+    await this.categoryService.findByIdOrThrow(categoryId);
+
+    return await this.prisma.productCategory.deleteMany({
+      where: { categoryId, productId: { in: productIds } },
+    });
+  }
 }
