@@ -4,62 +4,71 @@ const categories = [
   {
     name: "Antibiotics",
     description:
-      "Medications used to treat bacterial infections, such as amoxicillin or azithromycin.",
+      "Used to treat bacterial infections (e.g., amoxicillin, azithromycin).",
   },
   {
     name: "Antivirals",
+    description: "Treat viral infections (e.g., acyclovir, oseltamivir).",
+  },
+  {
+    name: "Antifungals",
     description:
-      "Drugs used to treat viral infections, including influenza and herpes medications.",
+      "Used to treat fungal infections (e.g., fluconazole, terbinafine).",
   },
   {
     name: "Analgesics",
     description:
-      "Pain-relieving medications such as paracetamol, ibuprofen, or opioids.",
+      "Pain relief medications (e.g., paracetamol, ibuprofen, tramadol).",
   },
   {
     name: "Anti-inflammatory Drugs",
-    description:
-      "Medications that reduce inflammation, including corticosteroids and NSAIDs.",
+    description: "Reduce inflammation (NSAIDs, corticosteroids).",
   },
   {
     name: "Antihistamines",
     description:
-      "Used to relieve allergic reactions, itching, and nasal congestion.",
+      "For allergies and histamine-related conditions (e.g., loratadine, cetirizine).",
   },
   {
     name: "Antidepressants",
-    description:
-      "Medications for managing depression and anxiety disorders (e.g., SSRIs, SNRIs).",
+    description: "Treat depression and anxiety (e.g., fluoxetine, sertraline).",
   },
   {
     name: "Cardiovascular Drugs",
     description:
-      "Medications used to treat heart diseases and regulate blood pressure.",
+      "Treat heart diseases and regulate blood pressure (e.g., atenolol, amlodipine).",
   },
   {
     name: "Antidiabetic Agents",
+    description: "Control blood glucose levels (e.g., metformin, insulin).",
+  },
+  {
+    name: "Gastrointestinal Drugs",
     description:
-      "Drugs used to control blood sugar levels in patients with diabetes.",
+      "For stomach and intestinal disorders (e.g., omeprazole, ranitidine).",
+  },
+  {
+    name: "Respiratory Drugs",
+    description:
+      "Treat asthma, bronchitis, etc. (e.g., salbutamol, budesonide).",
   },
   {
     name: "Vitamins and Supplements",
     description:
-      "Essential nutrients and dietary supplements to support overall health.",
+      "Essential nutrients supporting overall health (e.g., vitamin C, D3, zinc).",
   },
   {
     name: "Vaccines",
     description:
-      "Biological preparations that provide immunity against specific diseases.",
+      "Provide immunity against diseases (e.g., influenza, hepatitis vaccines).",
   },
   {
-    name: "Antifungal Agents",
-    description:
-      "Medications used to treat fungal infections of skin, nails, or internal organs.",
+    name: "Hormonal Drugs",
+    description: "Affect hormone balance (e.g., levothyroxine, estrogen).",
   },
   {
-    name: "Antiseptics and Disinfectants",
-    description:
-      "Used to prevent infection by killing or inhibiting the growth of microorganisms.",
+    name: "Sedatives and Hypnotics",
+    description: "For anxiety and sleep disorders (e.g., diazepam, zolpidem).",
   },
 ];
 
