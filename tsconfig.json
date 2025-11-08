@@ -27,6 +27,6 @@
       "generated/prisma": ["generated/prisma/index.d.ts"]
     }
   },
-  "include": ["src/**/*", "prisma/seed/**/*"],
+  "include": ["src/**/*", "prisma/seed/**/*", "test/**/*"],
   "exclude": ["node_modules", "test", "dist", "**/*.spec.ts"]
 }
