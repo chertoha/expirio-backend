@@ -13,6 +13,7 @@ import { DeleteAssignedCategoryDto } from "./dto/delete-assigned-category.dto";
 import { PageableService } from "../pageable/pageable.service";
 import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 import { Prisma } from "@prisma/client";
+import { FindProductQueryDto } from "./dto/find-product-query.dto";
 
 const include: Prisma.ProductInclude = {
   categories: { include: { category: true } },
@@ -46,8 +47,20 @@ export class ProductService {
     return newProduct;
   }
 
-  async findAll(queryDto: QueryPageOptionsDto) {
-    return await this.pageableService.findAll("product", queryDto, {}, include);
+  async findAll(queryDto: FindProductQueryDto) {
+    const { categoryId, activeIngredientId } = queryDto;
+
+    const where: Prisma.ProductWhereInput = {
+      ...(categoryId && { categories: { some: { categoryId } } }),
+      ...(activeIngredientId && { activeIngredientId }),
+    };
+
+    return await this.pageableService.findAll(
+      "product",
+      queryDto,
+      where,
+      include,
+    );
   }
 
   async findOne(id: number) {

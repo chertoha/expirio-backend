@@ -15,7 +15,7 @@ import { UpdateProductDto } from "./dto/update-product.dto";
 import { AssignCategoryDto } from "./dto/assign-category.dto";
 import { FindAssignCategoryQueryDto } from "./dto/find-assign-category-query.dto";
 import { DeleteAssignedCategoryDto } from "./dto/delete-assigned-category.dto";
-import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
+import { FindProductQueryDto } from "./dto/find-product-query.dto";
 
 @Controller("products")
 export class ProductController {
@@ -27,7 +27,7 @@ export class ProductController {
   }
 
   @Get()
-  async findAll(@Query() queryDto: QueryPageOptionsDto) {
+  async findAll(@Query() queryDto: FindProductQueryDto) {
     return await this.productService.findAll(queryDto);
   }
 

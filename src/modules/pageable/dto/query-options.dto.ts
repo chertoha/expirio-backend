@@ -32,7 +32,7 @@ export class QueryPageOptionsDto extends IntersectionType(
   PageOptionsDto,
   QueryOptionsDto,
 ) {
-  get skip() {
+  public get skip() {
     return calculateSkip(this.page, this.limit);
   }
 }
