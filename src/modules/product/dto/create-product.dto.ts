@@ -14,6 +14,7 @@ export class CreateProductDto {
   name: string;
 
   @IsString()
+  @MaxLength(13)
   barcode: string;
 
   @IsNumber()

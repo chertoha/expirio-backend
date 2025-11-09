@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -11,12 +10,23 @@ import { AssignCategoryDto } from "./dto/assign-category.dto";
 import { CategoryService } from "../category/category.service";
 import { FindAssignCategoryQueryDto } from "./dto/find-assign-category-query.dto";
 import { DeleteAssignedCategoryDto } from "./dto/delete-assigned-category.dto";
+import { PageableService } from "../pageable/pageable.service";
+import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
+import { Prisma } from "@prisma/client";
+
+const include: Prisma.ProductInclude = {
+  categories: { include: { category: true } },
+  dosageUnit: true,
+  forms: { include: { form: true } },
+  activeIngredient: true,
+};
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly categoryService: CategoryService,
+    private readonly pageableService: PageableService,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
@@ -36,10 +46,8 @@ export class ProductService {
     return newProduct;
   }
 
-  async findAll() {
-    return await this.prisma.product.findMany({
-      orderBy: { id: "asc" },
-    });
+  async findAll(queryDto: QueryPageOptionsDto) {
+    return await this.pageableService.findAll("product", queryDto, {}, include);
   }
 
   async findOne(id: number) {
@@ -74,9 +82,27 @@ export class ProductService {
       throw new ConflictException("Product with this name already exists");
     return product;
   }
-  // remove(id: number) {
-  //   return `This action removes a #${id} product`;
-  // }
+
+  async delete(id: number) {
+    await this.findByIdOrThrow(id);
+
+    const usedProduct = await this.prisma.product.findUnique({
+      where: { id },
+      include: {
+        batches: true,
+      },
+    });
+
+    const hasBatches = !!usedProduct?.batches.length;
+    if (hasBatches)
+      throw new ConflictException("This product is used in batches");
+
+    await this.prisma.$transaction(async t => {
+      await t.productCategory.deleteMany({ where: { productId: id } });
+      await t.productForm.deleteMany({ where: { productId: id } });
+      await t.product.delete({ where: { id } });
+    });
+  }
 
   async assignCategory(assignCategoryDto: AssignCategoryDto) {
     const { productIds, categoryId } = assignCategoryDto;

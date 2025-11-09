@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  // Delete,
   ParseIntPipe,
   Query,
   Delete,
@@ -16,6 +15,7 @@ import { UpdateProductDto } from "./dto/update-product.dto";
 import { AssignCategoryDto } from "./dto/assign-category.dto";
 import { FindAssignCategoryQueryDto } from "./dto/find-assign-category-query.dto";
 import { DeleteAssignedCategoryDto } from "./dto/delete-assigned-category.dto";
+import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 
 @Controller("products")
 export class ProductController {
@@ -23,40 +23,22 @@ export class ProductController {
 
   @Post()
   async create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
+    return await this.productService.create(createProductDto);
   }
 
   @Get()
-  async findAll() {
-    return this.productService.findAll();
+  async findAll(@Query() queryDto: QueryPageOptionsDto) {
+    return await this.productService.findAll(queryDto);
+  }
+
+  @Post("assign-category")
+  async assignCategory(@Body() assignDto: AssignCategoryDto) {
+    return await this.productService.assignCategory(assignDto);
   }
 
   @Get("assign-category")
   async findAssignedCategory(@Query() queryDto: FindAssignCategoryQueryDto) {
     return await this.productService.findAssignedCategories(queryDto);
-  }
-
-  @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.productService.findOne(id);
-  }
-
-  @Patch(":id")
-  async update(
-    @Param("id", ParseIntPipe) id: number,
-    @Body() updateProductDto: UpdateProductDto,
-  ) {
-    return this.productService.update(id, updateProductDto);
-  }
-
-  // @Delete(":id")
-  // remove(@Param("id") id: string) {
-  //   return this.productService.remove(+id);
-  // }
-
-  @Post("assign-category")
-  async assignCategory(@Body() assignDto: AssignCategoryDto) {
-    return await this.productService.assignCategory(assignDto);
   }
 
   @Delete("assign-category")
@@ -66,5 +48,23 @@ export class ProductController {
     return await this.productService.deleteAssignedCategory(
       deleteAssignedCategoryDto,
     );
+  }
+
+  @Get(":id")
+  async findOne(@Param("id", ParseIntPipe) id: number) {
+    return await this.productService.findOne(id);
+  }
+
+  @Patch(":id")
+  async update(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
+    return await this.productService.update(id, updateProductDto);
+  }
+
+  @Delete(":id")
+  async remove(@Param("id", ParseIntPipe) id: number) {
+    return await this.productService.delete(id);
   }
 }
