@@ -133,7 +133,10 @@ export class ProductService {
       categoryId,
     }));
 
-    return await this.prisma.productCategory.createMany({ data: assignedData });
+    return await this.prisma.productCategory.createMany({
+      data: assignedData,
+      skipDuplicates: true,
+    });
   }
 
   async findAssignedCategories(queryDto: FindAssignCategoryQueryDto) {
