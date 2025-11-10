@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../database/prisma.service";
-import { PageableDto } from "./dto/pageable.dto";
+// import { PageableDto } from "./dto/pageable.dto";
 import { QueryPageOptionsDto } from "./dto/query-options.dto";
 
 type PageableModels = "batch" | "category" | "product";
@@ -15,8 +15,8 @@ export class PageableService {
     where?: object,
     include?: object,
   ) {
-    const { skip, limit, sort, search, searchField } = dto;
-
+    // const { skip, limit, sort, search, searchField } = dto;
+    const { skip, limit, sort } = dto;
     const defaultSearchFields: Record<PageableModels, string> = {
       category: "name",
       batch: "batchNumber",
