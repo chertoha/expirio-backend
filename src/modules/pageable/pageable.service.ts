@@ -3,20 +3,30 @@ import { PrismaService } from "../database/prisma.service";
 import { PageableDto } from "./dto/pageable.dto";
 import { QueryPageOptionsDto } from "./dto/query-options.dto";
 
+type PageableModels = "batch" | "category" | "product";
+
 @Injectable()
 export class PageableService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(
-    model: keyof PrismaService,
+    model: PageableModels,
     dto: QueryPageOptionsDto,
     where?: object,
     include?: object,
   ) {
-    const { skip, limit, sort, search } = dto;
+    const { skip, limit, sort, search, searchField } = dto;
 
-    const whereCondition = search
-      ? { ...where, name: { contains: search, mode: "insensitive" } }
+    const defaultSearchFields: Record<PageableModels, string> = {
+      category: "name",
+      batch: "batchNumber",
+      product: "name",
+    };
+
+    const field = dto.searchField || defaultSearchFields[model] || "id";
+
+    const whereCondition = dto.search
+      ? { ...where, [field]: { contains: dto.search, mode: "insensitive" } }
       : where;
 
     const orderBy = sort
@@ -36,9 +46,6 @@ export class PageableService {
       prismaModel.count({ where: whereCondition }),
     ]);
 
-    return new PageableDto(data, {
-      totalElements,
-      options: { ...dto, skip, limit },
-    });
+    return { data, totalElements, page: dto.page, limit: dto.limit };
   }
 }

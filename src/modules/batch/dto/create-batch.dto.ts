@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsInt, IsDateString } from "class-validator";
 
-export class CreateBatcheDto {
+export class CreateBatchDto {
   @IsString()
   batchNumber: string;
 
