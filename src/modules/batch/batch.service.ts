@@ -100,6 +100,7 @@ export class BatchService {
 
     await this.findByIdOrThrow(id);
     await this.throwIfBatchNumberExists(batchNumber, id);
+    await this.productService.findByIdOrThrow(productId);
     await this.storageService.findByIdOrThrow(storageId);
     await this.storageService.findByIdOrThrow(oldStorageId);
     await this.findStorageBatchOrThrow(id, oldStorageId);
