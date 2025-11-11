@@ -81,9 +81,9 @@ export class ProductService {
     return updateProduct;
   }
 
-  private async findByIdOrThrow(id: number) {
+  async findByIdOrThrow(id: number) {
     const product = await this.prisma.product.findUnique({ where: { id } });
-    if (!product) throw new ConflictException("Product not found");
+    if (!product) throw new NotFoundException("Product not found");
     return product;
   }
 
