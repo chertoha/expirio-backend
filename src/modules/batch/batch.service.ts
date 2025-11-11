@@ -32,24 +32,38 @@ export class BatchService {
     await this.ThrowsWithoutOrIfBatchNumberExists(batchNumber);
     await this.productService.findByIdOrThrow(productId);
 
-    const batchData: any = {
-      batchNumber,
-      description,
-      manufactureDate: new Date(manufactureDate),
-      expirationDate: new Date(expirationDate),
-      productId,
-    };
+    // const batchData: any = {
+    //   batchNumber,
+    //   description,
+    //   manufactureDate: new Date(manufactureDate),
+    //   expirationDate: new Date(expirationDate),
+    //   productId,
+    // };
 
-    if (storageId && qty !== undefined) {
-      batchData.storages = {
-        create: {
-          storage: { connect: { id: Number(storageId) } },
-          qty: Number(qty),
+    // if (storageId && qty !== undefined) {
+    //   batchData.storages = {
+    //     create: {
+    //       storage: { connect: { id: Number(storageId) } },
+    //       qty: Number(qty),
+    //     },
+    //   };
+    // }
+
+    const newBatch = await this.prisma.batch.create({
+      data: {
+        batchNumber,
+        description,
+        manufactureDate: new Date(manufactureDate),
+        expirationDate: new Date(expirationDate),
+        productId,
+        storages: {
+          create: {
+            storage: { connect: { id: storageId } },
+            qty: qty,
+          },
         },
-      };
-    }
-
-    const newBatch = await this.prisma.batch.create({ data: batchData });
+      },
+    });
 
     return newBatch;
   }
