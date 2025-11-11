@@ -39,7 +39,8 @@ export class StoragesService {
     });
     return updatedStorage;
   }
-  private async findByIdOrThrow(id: number) {
+
+  async findByIdOrThrow(id: number) {
     const storage = await this.prisma.storage.findUnique({ where: { id } });
     if (!storage) throw new ConflictException("Storage not found");
     return storage;

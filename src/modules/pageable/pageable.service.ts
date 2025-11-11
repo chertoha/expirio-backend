@@ -12,15 +12,22 @@ export class PageableService {
     dto: QueryPageOptionsDto,
     where?: object,
     include?: object,
+    searchField: string = "name", // додатковий параметр для пошуку по іншому полю
   ) {
-    const { skip, limit, sort, search } = dto;
+    const page = Number(dto.page) || 1;
+    const limit = Number(dto.limit) || 10;
+    const skip = (page - 1) * limit;
+    const { sort, search } = dto;
 
     const whereCondition = search
-      ? { ...where, name: { contains: search, mode: "insensitive" } }
+      ? { ...where, [searchField]: { contains: search, mode: "insensitive" } }
       : where;
 
     const orderBy = sort
-      ? { [sort.split(":")[0]]: sort.split(":")[1] }
+      ? (() => {
+          const [field, dir] = sort.split(":");
+          return { [field]: dir === "asc" ? "asc" : "desc" };
+        })()
       : { id: "desc" };
 
     const prismaModel = this.prisma[model] as any;
@@ -38,7 +45,7 @@ export class PageableService {
 
     return new PageableDto(data, {
       totalElements,
-      options: { ...dto, skip, limit },
+      options: { ...dto, page, limit, skip },
     });
   }
 }

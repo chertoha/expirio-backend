@@ -5,10 +5,18 @@ import { sortPattern } from "src/utils/patterns";
 import { calculateSkip } from "src/helpers/calculateSkip";
 
 export class QueryOptionsDto {
-  @ApiPropertyOptional({ example: "cream", description: "Search query" })
+  @ApiPropertyOptional({ example: "test", description: "Search query" })
   @IsString()
   @IsOptional()
   search?: string;
+
+  @ApiPropertyOptional({
+    example: "name",
+    description: "Field to search by",
+  })
+  @IsString()
+  @IsOptional()
+  searchField?: string;
 
   @ApiPropertyOptional({
     example: "name:asc",
