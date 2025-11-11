@@ -18,7 +18,6 @@ export class StoragesService {
 
     const newStorage = await this.prisma.storage.create({
       data: { name, description, temperature },
-      include,
     });
     return newStorage;
   }
