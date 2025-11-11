@@ -19,9 +19,9 @@ export class PageableService {
     const skip = (page - 1) * limit;
     const { sort, search } = dto;
 
-const whereCondition = search
-  ? { ...where, [searchField]: { contains: search, mode: "insensitive" } }
-  : where;
+    const whereCondition = search
+      ? { ...where, [searchField]: { contains: search, mode: "insensitive" } }
+      : where;
 
     const orderBy = sort
       ? (() => {

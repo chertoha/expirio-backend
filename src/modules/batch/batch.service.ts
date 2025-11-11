@@ -102,32 +102,33 @@ export class BatchService {
     await this.throwIfBatchNumberExists(batchNumber, id);
     await this.storageService.findByIdOrThrow(storageId);
     await this.storageService.findByIdOrThrow(oldStorageId);
+    await this.throwIfStorageBatchExists(id, oldStorageId);
     await this.throwIfStorageBatchExists(id, storageId);
 
-    await this.prisma.storageBatch.delete({
-      where: { storageId_batchId: { batchId: id, storageId: oldStorageId } },
-    });
+    return await this.prisma.$transaction(async t => {
+      await t.storageBatch.delete({
+        where: { storageId_batchId: { batchId: id, storageId: oldStorageId } },
+      });
 
-    const updatedBatch = await this.prisma.batch.update({
-      where: { id },
-      data: {
-        batchNumber,
-        description,
-        manufactureDate,
-        expirationDate,
+      return await t.batch.update({
+        where: { id },
+        data: {
+          batchNumber,
+          description,
+          manufactureDate: new Date(manufactureDate),
+          expirationDate: new Date(expirationDate),
 
-        product: { connect: { id: productId } },
+          product: { connect: { id: productId } },
 
-        storages: {
-          create: {
-            storage: { connect: { id: storageId } },
-            qty: qty,
+          storages: {
+            create: {
+              storage: { connect: { id: storageId } },
+              qty: qty,
+            },
           },
         },
-      },
+      });
     });
-
-    return updatedBatch;
   }
 
   async remove(id: number) {
