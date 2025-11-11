@@ -24,6 +24,10 @@ export class BatcheService {
         manufactureDate: new Date(manufactureDate),
         expirationDate: new Date(expirationDate),
         productId,
+
+        // storages: {
+        //   connect: { storageId_batchId: { batchId, storageId }, qty },
+        // },
       },
     });
 
