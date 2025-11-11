@@ -1,7 +1,17 @@
-import { IsString, IsOptional, IsInt, IsDateString } from "class-validator";
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  IsDateString,
+  Min,
+  MinLength,
+  MaxLength,
+} from "class-validator";
 
 export class CreateBatchDto {
   @IsString()
+  @MinLength(3)
+  @MaxLength(50)
   batchNumber: string;
 
   @IsOptional()
@@ -16,4 +26,11 @@ export class CreateBatchDto {
 
   @IsInt()
   productId: number;
+
+  @IsInt()
+  storageId: number;
+
+  @IsInt()
+  @Min(0)
+  qty: number;
 }

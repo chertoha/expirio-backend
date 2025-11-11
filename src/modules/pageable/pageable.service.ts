@@ -1,36 +1,33 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../database/prisma.service";
-// import { PageableDto } from "./dto/pageable.dto";
+import { PageableDto } from "./dto/pageable.dto";
 import { QueryPageOptionsDto } from "./dto/query-options.dto";
-
-type PageableModels = "batch" | "category" | "product";
 
 @Injectable()
 export class PageableService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(
-    model: PageableModels,
+    model: keyof PrismaService,
     dto: QueryPageOptionsDto,
     where?: object,
     include?: object,
+    searchField: string = "name", // додатковий параметр для пошуку по іншому полю
   ) {
-    // const { skip, limit, sort, search, searchField } = dto;
-    const { skip, limit, sort } = dto;
-    const defaultSearchFields: Record<PageableModels, string> = {
-      category: "name",
-      batch: "batchNumber",
-      product: "name",
-    };
+    const page = Number(dto.page) || 1;
+    const limit = Number(dto.limit) || 10;
+    const skip = (page - 1) * limit;
+    const { sort, search } = dto;
 
-    const field = dto.searchField || defaultSearchFields[model] || "id";
-
-    const whereCondition = dto.search
-      ? { ...where, [field]: { contains: dto.search, mode: "insensitive" } }
-      : where;
+const whereCondition = search
+  ? { ...where, [searchField]: { contains: search, mode: "insensitive" } }
+  : where;
 
     const orderBy = sort
-      ? { [sort.split(":")[0]]: sort.split(":")[1] }
+      ? (() => {
+          const [field, dir] = sort.split(":");
+          return { [field]: dir === "asc" ? "asc" : "desc" };
+        })()
       : { id: "desc" };
 
     const prismaModel = this.prisma[model] as any;
@@ -46,6 +43,9 @@ export class PageableService {
       prismaModel.count({ where: whereCondition }),
     ]);
 
-    return { data, totalElements, page: dto.page, limit: dto.limit };
+    return new PageableDto(data, {
+      totalElements,
+      options: { ...dto, page, limit, skip },
+    });
   }
 }

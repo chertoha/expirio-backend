@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { PrismaService } from "../database/prisma.service";
@@ -47,9 +51,9 @@ export class ProductService {
     return updateProduct;
   }
 
-  private async findByIdOrThrow(id: number) {
+  async findByIdOrThrow(id: number) {
     const product = await this.prisma.product.findUnique({ where: { id } });
-    if (!product) throw new ConflictException("Product not found");
+    if (!product) throw new NotFoundException("Product not found");
     return product;
   }
 

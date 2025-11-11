@@ -13,7 +13,7 @@ import { PageableModule } from "./modules/pageable/pageable.module";
 import { DrugFormModule } from "./modules/drug-form/drug-form.module";
 import { StoragesModule } from "./modules/storages/storages.module";
 import { ProductModule } from "./modules/product/product.module";
-import { BatcheModule } from "./modules/batch/batch.module";
+import { BatchModule } from "./modules/batch/batch.module";
 
 @Module({
   imports: [
@@ -28,7 +28,7 @@ import { BatcheModule } from "./modules/batch/batch.module";
     DrugFormModule,
     StoragesModule,
     ProductModule,
-    BatcheModule,
+    BatchModule,
   ],
   controllers: [],
   providers: [

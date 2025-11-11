@@ -1,7 +1,12 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { CreateBatchDto } from "./dto/create-batch.dto";
 import { UpdateBatchDto } from "./dto/update-batch.dto";
 import { PrismaService } from "../database/prisma.service";
+import { ProductService } from "../product/product.service";
 import { PageableService } from "../pageable/pageable.service";
 import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 
@@ -10,7 +15,9 @@ export class BatchService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly pageableService: PageableService,
+    private readonly productService: ProductService,
   ) {}
+
   async create(createBatchDto: CreateBatchDto) {
     const {
       batchNumber,
@@ -18,19 +25,31 @@ export class BatchService {
       manufactureDate,
       expirationDate,
       productId,
+      storageId,
+      qty,
     } = createBatchDto;
 
-    await this.findByBatchNumberOrThrow(batchNumber);
+    await this.ThrowsWithoutOrIfBatchNumberExists(batchNumber);
+    await this.productService.findByIdOrThrow(productId);
 
-    const newBatch = await this.prisma.batch.create({
-      data: {
-        batchNumber,
-        description,
-        manufactureDate: new Date(manufactureDate),
-        expirationDate: new Date(expirationDate),
-        productId,
-      },
-    });
+    const batchData: any = {
+      batchNumber,
+      description,
+      manufactureDate: new Date(manufactureDate),
+      expirationDate: new Date(expirationDate),
+      productId,
+    };
+
+    if (storageId && qty !== undefined) {
+      batchData.storages = {
+        create: {
+          storage: { connect: { id: Number(storageId) } },
+          qty: Number(qty),
+        },
+      };
+    }
+
+    const newBatch = await this.prisma.batch.create({ data: batchData });
 
     return newBatch;
   }
@@ -44,6 +63,7 @@ export class BatchService {
         storages: true,
         product: { include: { categories: { include: { category: true } } } },
       },
+      "batchNumber", // searchField
     );
   }
 
@@ -59,26 +79,33 @@ export class BatchService {
       expirationDate,
       productId,
     } = updateBatchDto;
-    const existingBatch = await this.findByIdOrThrow(id);
-    if (batchNumber && batchNumber !== existingBatch.batchNumber)
-      await this.findByBatchNumberOrThrow(batchNumber);
 
-    const updateBatche = await this.prisma.batch.update({
+    await this.findByIdOrThrow(id);
+    if (batchNumber) {
+      await this.ThrowsWithoutOrIfBatchNumberExists(batchNumber, id);
+    }
+
+    // await this.ThrowsWithoutOrIfBatchNumberExists(batchNumber, id);
+
+    const data: any = {
+      batchNumber,
+      description,
+      productId,
+    };
+
+    if (manufactureDate) data.manufactureDate = new Date(manufactureDate);
+    if (expirationDate) data.expirationDate = new Date(expirationDate);
+
+    const updatedBatch = await this.prisma.batch.update({
       where: { id },
-      data: {
-        batchNumber,
-        description,
-        manufactureDate,
-        expirationDate,
-        productId,
-      },
+      data,
     });
-    return updateBatche;
+
+    return updatedBatch;
   }
 
   async remove(id: number) {
-    const batch = await this.prisma.batch.findUnique({ where: { id } });
-    if (!batch) return { message: "Batch not found, nothing to delete." };
+    await this.findByIdOrThrow(id);
 
     const assignedStorages = await this.prisma.storageBatch.findMany({
       where: { batchId: id },
@@ -92,8 +119,7 @@ export class BatchService {
       );
     }
 
-    await this.prisma.batch.delete({ where: { id } });
-    return { message: "Batch deleted successfully." };
+    return await this.prisma.batch.delete({ where: { id } });
   }
 
   private async findByIdOrThrow(id: number) {
@@ -104,18 +130,30 @@ export class BatchService {
         product: { include: { categories: { include: { category: true } } } },
       },
     });
-    if (!batch) throw new ConflictException("Batch not found");
+    if (!batch) throw new NotFoundException("Batch not found");
     return batch;
   }
 
-  private async findByBatchNumberOrThrow(batchNumber: string) {
-    const existing = await this.prisma.batch.findUnique({
-      where: { batchNumber },
+  private async ThrowsWithoutOrIfBatchNumberExists(
+    batchNumber: string,
+    selfId?: number,
+  ) {
+    const existing = await this.prisma.batch.findFirst({
+      where: selfId
+        ? {
+            batchNumber,
+            NOT: { id: selfId },
+          }
+        : {
+            batchNumber,
+          },
     });
-    if (existing)
+
+    if (existing) {
       throw new ConflictException(
         "Batch with this batch number already exists",
       );
+    }
     return existing;
   }
 }

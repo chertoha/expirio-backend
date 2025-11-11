@@ -2,10 +2,13 @@ import { Module } from "@nestjs/common";
 import { BatchService } from "./batch.service";
 import { BatchController } from "./batch.controller";
 import { PrismaService } from "../database/prisma.service";
-import { PageableModule } from "../pageable/pageable.module";
+import { PageableService } from "../pageable/pageable.service";
+import { ProductModule } from "../product/product.module";
 @Module({
-  imports: [PageableModule],
+  imports: [ProductModule],
   controllers: [BatchController],
-  providers: [BatchService, PrismaService],
+  providers: [BatchService, PrismaService, PageableService],
+  exports: [BatchService],
 })
-export class BatcheModule {}
+export class BatchModule {}
+
