@@ -1,7 +1,12 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { CreateStorageDto } from "./dto/create-storage.dto";
 import { UpdateStorageDto } from "./dto/update-storage.dto";
 import { PrismaService } from "../database/prisma.service";
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class StoragesService {
@@ -13,6 +18,7 @@ export class StoragesService {
 
     const newStorage = await this.prisma.storage.create({
       data: { name, description, temperature },
+      include,
     });
     return newStorage;
   }
@@ -42,7 +48,7 @@ export class StoragesService {
 
   async findByIdOrThrow(id: number) {
     const storage = await this.prisma.storage.findUnique({ where: { id } });
-    if (!storage) throw new ConflictException("Storage not found");
+    if (!storage) throw new NotFoundException("Storage not found");
     return storage;
   }
 

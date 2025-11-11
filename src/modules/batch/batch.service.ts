@@ -11,6 +11,11 @@ import { PageableService } from "../pageable/pageable.service";
 import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 import { StoragesService } from "../storages/storages.service";
 
+const include = {
+  product: { include: { categories: { include: { category: true } } } },
+  storages: { include: { storage: true } },
+};
+
 @Injectable()
 export class BatchService {
   constructor(
@@ -35,23 +40,6 @@ export class BatchService {
     await this.productService.findByIdOrThrow(productId);
     await this.storageService.findByIdOrThrow(storageId);
 
-    // const batchData: any = {
-    //   batchNumber,
-    //   description,
-    //   manufactureDate: new Date(manufactureDate),
-    //   expirationDate: new Date(expirationDate),
-    //   productId,
-    // };
-
-    // if (storageId && qty !== undefined) {
-    //   batchData.storages = {
-    //     create: {
-    //       storage: { connect: { id: Number(storageId) } },
-    //       qty: Number(qty),
-    //     },
-    //   };
-    // }
-
     return await this.prisma.batch.create({
       data: {
         batchNumber,
@@ -66,6 +54,7 @@ export class BatchService {
           },
         },
       },
+      include,
     });
   }
 
@@ -74,10 +63,7 @@ export class BatchService {
       "batch",
       dto,
       {},
-      {
-        storages: true,
-        product: { include: { categories: { include: { category: true } } } },
-      },
+      include,
       "batchNumber", // searchField
     );
   }
@@ -128,6 +114,7 @@ export class BatchService {
             },
           },
         },
+        include,
       });
     });
   }
