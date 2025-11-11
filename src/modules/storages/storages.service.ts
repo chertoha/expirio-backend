@@ -6,7 +6,6 @@ import {
 import { CreateStorageDto } from "./dto/create-storage.dto";
 import { UpdateStorageDto } from "./dto/update-storage.dto";
 import { PrismaService } from "../database/prisma.service";
-import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class StoragesService {
