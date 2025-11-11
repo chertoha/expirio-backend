@@ -11,7 +11,6 @@ import { CategoryService } from "../category/category.service";
 import { FindAssignCategoryQueryDto } from "./dto/find-assign-category-query.dto";
 import { DeleteAssignedCategoryDto } from "./dto/delete-assigned-category.dto";
 import { PageableService } from "../pageable/pageable.service";
-import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 import { Prisma } from "@prisma/client";
 import { FindProductQueryDto } from "./dto/find-product-query.dto";
 
