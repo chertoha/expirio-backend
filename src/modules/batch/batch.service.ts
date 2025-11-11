@@ -102,7 +102,7 @@ export class BatchService {
     await this.throwIfBatchNumberExists(batchNumber, id);
     await this.storageService.findByIdOrThrow(storageId);
     await this.storageService.findByIdOrThrow(oldStorageId);
-    await this.throwIfStorageBatchExists(id, oldStorageId);
+    await this.findStorageBatchOrThrow(id, oldStorageId);
     await this.throwIfStorageBatchExists(id, storageId);
 
     return await this.prisma.$transaction(async t => {
@@ -192,5 +192,13 @@ export class BatchService {
     if (existing) {
       throw new ConflictException("Current batch and storage already exist");
     }
+  }
+
+  async findStorageBatchOrThrow(batchId: number, storageId: number) {
+    const existing = await this.prisma.storageBatch.findUnique({
+      where: { storageId_batchId: { batchId, storageId } },
+    });
+
+    if (!existing) throw new NotFoundException("Batch Storage not found");
   }
 }
