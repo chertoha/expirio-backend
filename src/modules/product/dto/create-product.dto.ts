@@ -1,3 +1,4 @@
+import { Type } from "class-transformer";
 import {
   IsString,
   IsNumber,
@@ -13,14 +14,17 @@ export class CreateProductDto {
   name: string;
 
   @IsString()
+  @MaxLength(13)
   barcode: string;
 
   @IsNumber()
   dosage: number;
 
   @IsInt()
+  @Type(() => Number)
   dosageUnitId: number;
 
   @IsInt()
+  @Type(() => Number)
   activeIngredientId: number;
 }

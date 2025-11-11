@@ -49,7 +49,7 @@ export class CategoryService {
     return updatedCategory;
   }
 
-  private async findByIdOrThrow(id: number) {
+  async findByIdOrThrow(id: number) {
     const category = await this.prisma.category.findUnique({ where: { id } });
     if (!category) throw new ConflictException("Category not found");
     return category;
