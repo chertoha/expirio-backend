@@ -9,6 +9,7 @@ import { PrismaService } from "../database/prisma.service";
 import { ProductService } from "../product/product.service";
 import { PageableService } from "../pageable/pageable.service";
 import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
+import { StoragesService } from "../storages/storages.service";
 
 @Injectable()
 export class BatchService {
@@ -16,6 +17,7 @@ export class BatchService {
     private readonly prisma: PrismaService,
     private readonly pageableService: PageableService,
     private readonly productService: ProductService,
+    private readonly storageService: StoragesService,
   ) {}
 
   async create(createBatchDto: CreateBatchDto) {
@@ -29,8 +31,9 @@ export class BatchService {
       qty,
     } = createBatchDto;
 
-    await this.ThrowsWithoutOrIfBatchNumberExists(batchNumber);
+    await this.throwIfBatchNumberExists(batchNumber);
     await this.productService.findByIdOrThrow(productId);
+    await this.storageService.findByIdOrThrow(storageId);
 
     // const batchData: any = {
     //   batchNumber,
@@ -49,7 +52,7 @@ export class BatchService {
     //   };
     // }
 
-    const newBatch = await this.prisma.batch.create({
+    return await this.prisma.batch.create({
       data: {
         batchNumber,
         description,
@@ -64,8 +67,6 @@ export class BatchService {
         },
       },
     });
-
-    return newBatch;
   }
 
   async findAll(dto: QueryPageOptionsDto) {
@@ -92,27 +93,38 @@ export class BatchService {
       manufactureDate,
       expirationDate,
       productId,
+      qty,
+      oldStorageId,
+      storageId,
     } = updateBatchDto;
 
     await this.findByIdOrThrow(id);
-    if (batchNumber) {
-      await this.ThrowsWithoutOrIfBatchNumberExists(batchNumber, id);
-    }
+    await this.throwIfBatchNumberExists(batchNumber, id);
+    await this.storageService.findByIdOrThrow(storageId);
+    await this.storageService.findByIdOrThrow(oldStorageId);
+    await this.throwIfStorageBatchExists(id, storageId);
 
-    // await this.ThrowsWithoutOrIfBatchNumberExists(batchNumber, id);
-
-    const data: any = {
-      batchNumber,
-      description,
-      productId,
-    };
-
-    if (manufactureDate) data.manufactureDate = new Date(manufactureDate);
-    if (expirationDate) data.expirationDate = new Date(expirationDate);
+    await this.prisma.storageBatch.delete({
+      where: { storageId_batchId: { batchId: id, storageId: oldStorageId } },
+    });
 
     const updatedBatch = await this.prisma.batch.update({
       where: { id },
-      data,
+      data: {
+        batchNumber,
+        description,
+        manufactureDate,
+        expirationDate,
+
+        product: { connect: { id: productId } },
+
+        storages: {
+          create: {
+            storage: { connect: { id: storageId } },
+            qty: qty,
+          },
+        },
+      },
     });
 
     return updatedBatch;
@@ -148,19 +160,20 @@ export class BatchService {
     return batch;
   }
 
-  private async ThrowsWithoutOrIfBatchNumberExists(
-    batchNumber: string,
-    selfId?: number,
-  ) {
-    const existing = await this.prisma.batch.findFirst({
-      where: selfId
-        ? {
-            batchNumber,
-            NOT: { id: selfId },
-          }
-        : {
-            batchNumber,
-          },
+  private async throwIfBatchNumberExists(batchNumber: string, selfId?: number) {
+    // const existing = await this.prisma.batch.findFirst({
+    //   where: selfId
+    //     ? {
+    //         batchNumber,
+    //         NOT: { id: selfId },
+    //       }
+    //     : {
+    //         batchNumber,
+    //       },
+    // });
+
+    const existing = await this.prisma.batch.findUnique({
+      where: { batchNumber, NOT: { id: selfId } },
     });
 
     if (existing) {
@@ -168,6 +181,15 @@ export class BatchService {
         "Batch with this batch number already exists",
       );
     }
-    return existing;
+  }
+
+  async throwIfStorageBatchExists(batchId: number, storageId: number) {
+    const existing = await this.prisma.storageBatch.findUnique({
+      where: { storageId_batchId: { batchId, storageId } },
+    });
+
+    if (existing) {
+      throw new ConflictException("Current batch and storage already exist");
+    }
   }
 }

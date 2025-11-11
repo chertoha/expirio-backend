@@ -3,11 +3,11 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   ParseIntPipe,
   Query,
+  Put,
 } from "@nestjs/common";
 import { BatchService } from "./batch.service";
 import { CreateBatchDto } from "./dto/create-batch.dto";
@@ -32,7 +32,7 @@ export class BatchController {
     return this.BatchService.findOne(id);
   }
 
-  @Patch(":id")
+  @Put(":id")
   update(
     @Param("id", ParseIntPipe) id: number,
     @Body() UpdateBatchDto: UpdateBatchDto,
