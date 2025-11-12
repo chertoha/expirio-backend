@@ -7,10 +7,14 @@ import {
   Param,
   // Delete,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
 import { ActiveIngredientService } from "./active-ingredient.service";
 import { CreateActiveIngredientDto } from "./dto/create-active-ingredient.dto";
 import { UpdateActiveIngredientDto } from "./dto/update-active-ingredient.dto";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { ApiConsumes } from "@nestjs/swagger";
 
 @Controller("active-ingredients")
 export class ActiveIngredientController {
@@ -41,8 +45,11 @@ export class ActiveIngredientController {
     return this.activeIngredientService.update(id, updateActiveIngredientDto);
   }
 
-  // @Delete(":id")
-  // remove(@Param("id") id: string) {
-  //   return this.activeIngredientService.remove(+id);
-  // }
+  @Post("/import-excel")
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiConsumes("multipart/form-data")
+  async importExcel(@UploadedFile() file: Express.Multer.File) {
+    const result = await this.activeIngredientService.importFromExcel(file);
+    return result;
+  }
 }

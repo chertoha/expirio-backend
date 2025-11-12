@@ -22,7 +22,11 @@ export class StoragesService {
   }
 
   async findAll() {
-    return await this.prisma.storage.findMany();
+    const storages = await this.prisma.storage.findMany({
+      include: { batches: true },
+    });
+
+    return storages;
   }
 
   async findOne(id: number) {

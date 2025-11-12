@@ -4,12 +4,13 @@ import { UpdateCategoryDto } from "./dto/update-category.dto";
 import { PrismaService } from "../database/prisma.service";
 import { PageableService } from "../pageable/pageable.service";
 import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class CategoryService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly pageableService: PageableService, // ✅ додано інʼєкцію
+    private readonly pageableService: PageableService,
   ) {}
   async create(createCategoryDto: CreateCategoryDto) {
     const { name, description } = createCategoryDto;
@@ -29,7 +30,10 @@ export class CategoryService {
   //   });
   // }
   async findAll(dto: QueryPageOptionsDto) {
-    return await this.pageableService.findAll("category", dto);
+    const include: Prisma.CategoryInclude = {
+      products: true,
+    };
+    return await this.pageableService.findAll("category", dto, {}, include);
   }
 
   async findOne(id: number) {
