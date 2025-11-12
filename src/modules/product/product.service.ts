@@ -13,6 +13,8 @@ import { DeleteAssignedCategoryDto } from "./dto/delete-assigned-category.dto";
 import { PageableService } from "../pageable/pageable.service";
 import { Prisma } from "@prisma/client";
 import { FindProductQueryDto } from "./dto/find-product-query.dto";
+import { ActiveIngredientService } from "../active-ingredient/active-ingredient.service";
+import { DosageUnitService } from "../dosage-unit/dosage-unit.service";
 
 const include: Prisma.ProductInclude = {
   categories: { include: { category: true } },
@@ -27,12 +29,16 @@ export class ProductService {
     private readonly prisma: PrismaService,
     private readonly categoryService: CategoryService,
     private readonly pageableService: PageableService,
+    private readonly dosageUnitService: DosageUnitService,
+    private readonly activeIngredientService: ActiveIngredientService,
   ) {}
 
   async create(createProductDto: CreateProductDto) {
     const { name, barcode, dosage, dosageUnitId, activeIngredientId } =
       createProductDto;
     await this.findByNameOrThrow(name);
+    await this.dosageUnitService.findByIdOrThrow(dosageUnitId);
+    await this.activeIngredientService.findByIdOrThrow(activeIngredientId);
     const newProduct = await this.prisma.product.create({
       data: {
         name,
@@ -70,6 +76,10 @@ export class ProductService {
     const { name, barcode, dosage, dosageUnitId, activeIngredientId } =
       updateProductDto;
     const existingProduct = await this.findByIdOrThrow(id);
+
+    await this.throwIfBarcodeExists(barcode, id);
+    await this.activeIngredientService.findByIdOrThrow(activeIngredientId);
+    await this.dosageUnitService.findByIdOrThrow(dosageUnitId);
     if (name && name !== existingProduct.name)
       await this.findByNameOrThrow(name);
 
@@ -166,5 +176,14 @@ export class ProductService {
     return await this.prisma.productCategory.deleteMany({
       where: { categoryId, productId: { in: productIds } },
     });
+  }
+
+  private async throwIfBarcodeExists(barcode: string, selfId?: number) {
+    const existing = await this.prisma.product.findUnique({
+      where: selfId ? { barcode, NOT: { id: selfId } } : { barcode },
+    });
+    if (existing) {
+      throw new ConflictException("Product with this barcode already exists");
+    }
   }
 }

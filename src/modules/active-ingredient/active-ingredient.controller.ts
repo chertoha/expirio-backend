@@ -5,7 +5,7 @@ import {
   Body,
   Put,
   Param,
-  // Delete,
+  Delete,
   ParseIntPipe,
 } from "@nestjs/common";
 import { ActiveIngredientService } from "./active-ingredient.service";
@@ -41,8 +41,8 @@ export class ActiveIngredientController {
     return this.activeIngredientService.update(id, updateActiveIngredientDto);
   }
 
-  // @Delete(":id")
-  // remove(@Param("id") id: string) {
-  //   return this.activeIngredientService.remove(+id);
-  // }
+  @Delete(":id")
+  remove(@Param("id", ParseIntPipe) id: number) {
+    return this.activeIngredientService.remove(id);
+  }
 }

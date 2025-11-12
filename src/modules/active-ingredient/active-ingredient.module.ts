@@ -5,5 +5,6 @@ import { ActiveIngredientController } from "./active-ingredient.controller";
 @Module({
   controllers: [ActiveIngredientController],
   providers: [ActiveIngredientService],
+  exports: [ActiveIngredientService],
 })
 export class ActiveIngredientModule {}

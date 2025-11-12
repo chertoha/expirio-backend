@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { CreateStorageDto } from "./dto/create-storage.dto";
 import { UpdateStorageDto } from "./dto/update-storage.dto";
 import { PrismaService } from "../database/prisma.service";
@@ -9,12 +13,11 @@ export class StoragesService {
   async create(createStorageDto: CreateStorageDto) {
     const { name, description, temperature } = createStorageDto;
 
-    await this.findByNameOrThrow(name);
+    await this.throwIfStorageNameExists(name);
 
-    const newStorage = await this.prisma.storage.create({
+    return await this.prisma.storage.create({
       data: { name, description, temperature },
     });
-    return newStorage;
   }
 
   async findAll() {
@@ -30,14 +33,28 @@ export class StoragesService {
 
     const existingStorage = await this.findByIdOrThrow(id);
     if (name && name !== existingStorage.name) {
-      await this.findByNameOrThrow(name);
+      await this.throwIfStorageNameExists(name);
     }
 
-    const updatedStorage = await this.prisma.storage.update({
+    return await this.prisma.storage.update({
       where: { id },
       data: { name, description, temperature },
     });
-    return updatedStorage;
+  }
+  async remove(id: number) {
+    await this.findByIdOrThrow(id);
+    const assignedBatches = await this.prisma.storageBatch.findMany({
+      where: { storageId: id },
+    });
+
+    if (assignedBatches.length > 0) {
+      throw new ConflictException(
+        `Cannot delete storage. It is assigned to batches: ${assignedBatches
+          .map(b => b.batchId)
+          .join(", ")}`,
+      );
+    }
+    return await this.prisma.storage.delete({ where: { id } });
   }
 
   async findByIdOrThrow(id: number) {
@@ -46,15 +63,9 @@ export class StoragesService {
     return storage;
   }
 
-  private async findByNameOrThrow(name: string) {
-    const storage = await this.prisma.storage.findUnique({
-      where: { name },
-    });
-    if (storage)
-      throw new ConflictException("Storage with this name already exists");
+  async throwIfStorageNameExists(name: string) {
+    const storage = await this.prisma.storage.findUnique({ where: { name } });
+    if (storage) throw new NotFoundException("Storage not found");
     return storage;
   }
-  // remove(id: number) {
-  //   return `This action removes a #${id} storage`;
-  // }
 }

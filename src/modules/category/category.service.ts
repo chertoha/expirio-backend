@@ -23,11 +23,6 @@ export class CategoryService {
     return newCategory;
   }
 
-  // async findAll() {
-  //   return this.prisma.category.findMany({
-  //     orderBy: { id: "asc" },
-  //   });
-  // }
   async findAll(dto: QueryPageOptionsDto) {
     return await this.pageableService.findAll("category", dto);
   }

@@ -3,10 +3,10 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   ParseIntPipe,
-  // Delete,
+  Delete,
 } from "@nestjs/common";
 import { StoragesService } from "./storages.service";
 import { CreateStorageDto } from "./dto/create-storage.dto";
@@ -31,7 +31,7 @@ export class StoragesController {
     return this.storagesService.findOne(id);
   }
 
-  @Patch(":id")
+  @Put(":id")
   update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateStorageDto: UpdateStorageDto,
@@ -39,8 +39,8 @@ export class StoragesController {
     return this.storagesService.update(id, updateStorageDto);
   }
 
-  // @Delete(":id")
-  // remove(@Param("id") id: string) {
-  //   return this.storagesService.remove(+id);
-  // }
+  @Delete(":id")
+  remove(@Param("id", ParseIntPipe) id: number) {
+    return this.storagesService.remove(id);
+  }
 }
