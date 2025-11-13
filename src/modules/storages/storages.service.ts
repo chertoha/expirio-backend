@@ -21,7 +21,11 @@ export class StoragesService {
   }
 
   async findAll() {
-    return await this.prisma.storage.findMany();
+    const storages = await this.prisma.storage.findMany({
+      include: { batches: true },
+    });
+
+    return storages;
   }
 
   async findOne(id: number) {
@@ -59,7 +63,7 @@ export class StoragesService {
 
   async findByIdOrThrow(id: number) {
     const storage = await this.prisma.storage.findUnique({ where: { id } });
-    if (!storage) throw new ConflictException("Storage not found");
+    if (!storage) throw new NotFoundException("Storage not found");
     return storage;
   }
 

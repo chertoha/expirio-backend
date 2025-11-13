@@ -41,7 +41,7 @@ export class ProductController {
     return await this.productService.findAssignedCategories(queryDto);
   }
 
-  @Delete("assign-category")
+  @Post("unassign-category")
   async deleteAssignedCategory(
     @Body() deleteAssignedCategoryDto: DeleteAssignedCategoryDto,
   ) {
