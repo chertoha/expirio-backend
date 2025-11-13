@@ -14,7 +14,7 @@ export class ActiveIngredientService {
   async create(createActiveIngredientDto: CreateActiveIngredientDto) {
     const { name } = createActiveIngredientDto;
 
-    await this.findByNameOrThrow(name);
+    await this.throwIfNameExists(name);
 
     const newActiveIngredient = await this.prisma.activeIngredient.create({
       data: { name },
@@ -39,7 +39,7 @@ export class ActiveIngredientService {
     const { name } = updateActiveIngredientDto;
     await this.findByIdOrThrow(id);
 
-    await this.findByNameOrThrow(name!);
+    await this.throwIfNameExists(name!);
 
     const updatedActiveIngredient = await this.prisma.activeIngredient.update({
       where: { id },
@@ -48,7 +48,26 @@ export class ActiveIngredientService {
     return updatedActiveIngredient;
   }
 
-  private async findByIdOrThrow(id: number) {
+  async remove(id: number) {
+    await this.findByIdOrThrow(id);
+
+    const usedInProducts = await this.prisma.product.findMany({
+      where: { activeIngredientId: id },
+      select: { id: true, name: true },
+    });
+
+    if (usedInProducts.length > 0) {
+      throw new ConflictException(
+        `Cannot delete active ingredient. It is used in products: ${usedInProducts
+          .map(p => p.name)
+          .join(", ")}`,
+      );
+    }
+
+    return this.prisma.activeIngredient.delete({ where: { id } });
+  }
+
+  async findByIdOrThrow(id: number) {
     const activeIngredient = await this.prisma.activeIngredient.findUnique({
       where: { id },
     });
@@ -58,17 +77,16 @@ export class ActiveIngredientService {
     return activeIngredient;
   }
 
-  private async findByNameOrThrow(name: string) {
-    const activeIngredient = await this.prisma.activeIngredient.findUnique({
+  private async throwIfNameExists(name: string) {
+    const existing = await this.prisma.activeIngredient.findUnique({
       where: { name },
     });
-    if (activeIngredient)
-      throw new ConflictException("Active Ingredient is already existed");
-    return activeIngredient;
-  }
 
-  remove(id: number) {
-    return `This action removes a #${id} activeIngredient`;
+    if (existing)
+      throw new ConflictException(
+        "Active ingredient with this name already exists",
+      );
+    return existing;
   }
 
   async importFromExcel(file: Express.Multer.File) {

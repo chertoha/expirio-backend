@@ -5,7 +5,7 @@ import {
   Body,
   Put,
   Param,
-  // Delete,
+  Delete,
   ParseIntPipe,
   UseInterceptors,
   UploadedFile,
@@ -43,6 +43,11 @@ export class ActiveIngredientController {
     @Body() updateActiveIngredientDto: UpdateActiveIngredientDto,
   ) {
     return this.activeIngredientService.update(id, updateActiveIngredientDto);
+  }
+
+  @Delete(":id")
+  remove(@Param("id", ParseIntPipe) id: number) {
+    return this.activeIngredientService.remove(id);
   }
 
   @Post("/import-excel")

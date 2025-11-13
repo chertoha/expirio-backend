@@ -9,7 +9,7 @@ export class DosageUnitService {
   async create(createDosageUnitDto: CreateDosageUnitDto) {
     const { name } = createDosageUnitDto;
 
-    await this.findByNameOrThrow(name);
+    await this.throwIfNameExists(name);
 
     const newDosageUnit = await this.prisma.dosageUnit.create({
       data: { name },
@@ -22,11 +22,13 @@ export class DosageUnitService {
     });
   }
   async findOne(id: number) {
-    return await this.findByInOrThorw(id);
+    return await this.findByIdOrThrow(id);
   }
   async update(id: number, updateDosageUnitDto: UpdateDosageUnitDto) {
     const { name } = updateDosageUnitDto;
-    await this.findByNameOrThrow(name);
+
+    await this.findByIdOrThrow(id);
+    await this.throwIfNameExists(name);
 
     const updateDosageUnit = await this.prisma.dosageUnit.update({
       where: { id },
@@ -34,19 +36,38 @@ export class DosageUnitService {
     });
     return updateDosageUnit;
   }
-  private async findByInOrThorw(id: number) {
+  async remove(id: number) {
+    await this.findByIdOrThrow(id);
+
+    const usedInProducts = await this.prisma.product.findMany({
+      where: { dosageUnitId: id },
+      select: { id: true, name: true },
+    });
+
+    if (usedInProducts.length > 0) {
+      throw new ConflictException(
+        `Cannot delete active ingredient. It is used in products: ${usedInProducts
+          .map(p => p.name)
+          .join(", ")}`,
+      );
+    }
+    return await this.prisma.dosageUnit.delete({ where: { id } });
+  }
+  async findByIdOrThrow(id: number) {
     const dosageUnit = await this.prisma.dosageUnit.findUnique({
       where: { id },
     });
     if (!dosageUnit) throw new ConflictException("Dosage Unit not found");
     return dosageUnit;
   }
-  private async findByNameOrThrow(name: string) {
+  private async throwIfNameExists(name: string) {
     const dosageUnit = await this.prisma.dosageUnit.findUnique({
       where: { name },
     });
     if (dosageUnit)
-      throw new ConflictException("Dosage Unit is already existed");
+      throw new ConflictException(
+        "Dosage Unit with this name is already existed",
+      );
     return dosageUnit;
   }
 }

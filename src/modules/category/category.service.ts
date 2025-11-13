@@ -24,11 +24,6 @@ export class CategoryService {
     return newCategory;
   }
 
-  // async findAll() {
-  //   return this.prisma.category.findMany({
-  //     orderBy: { id: "asc" },
-  //   });
-  // }
   async findAll(dto: QueryPageOptionsDto) {
     const include: Prisma.CategoryInclude = {
       products: true,

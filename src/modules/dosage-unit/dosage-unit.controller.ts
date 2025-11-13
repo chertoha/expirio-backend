@@ -4,7 +4,7 @@ import {
   Post,
   Body,
   Param,
-  // Delete,
+  Delete,
   // Query,
   Put,
   ParseIntPipe,
@@ -38,5 +38,9 @@ export class DosageUnitController {
     @Body() updateDosageUnitDto: UpdateDosageUnitDto,
   ) {
     return this.dosageUnitService.update(id, updateDosageUnitDto);
+  }
+  @Delete(":id")
+  remove(@Param("id", ParseIntPipe) id: number) {
+    return this.dosageUnitService.remove(id);
   }
 }

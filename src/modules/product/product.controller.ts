@@ -3,7 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   ParseIntPipe,
   Query,
@@ -55,7 +55,7 @@ export class ProductController {
     return await this.productService.findOne(id);
   }
 
-  @Patch(":id")
+  @Put(":id")
   async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateProductDto: UpdateProductDto,
