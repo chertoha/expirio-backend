@@ -68,7 +68,7 @@ export class NodemailerEmailStrategy implements NotificationStrategy {
       await this.transporter.sendMail({
         from: process.env.MAIL_FROM || process.env.MAIL_USERNAME,
         to: process.env.ALERT_EMAIL_TO,
-        subject: `⚠️ Expiration Alert: ${alert.name}`,
+        subject: `Expiration Alert: ${alert.name}`,
         template: "alert-email",
         context: {
           alertName: alert.name,
