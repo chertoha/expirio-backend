@@ -1,0 +1,96 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Expiration Alert</title>
+  </head>
+  <body
+    style="margin: 0; padding: 0; background-color: #f9fafc; font-family: Arial, sans-serif;"
+  >
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="background-color: #f9fafc; width: 100%;"
+    >
+      <tr>
+        <td align="left" style="padding: 20px 0;">
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="background: #f9fafc; border-radius: 10px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.05);"
+          >
+            <tr>
+              <td style="background-color: #f9fafc; padding: 20px 30px;">
+                <img
+                  src="cid:logo"
+                  alt="Company Logo"
+                  height="60"
+                  style="vertical-align: middle;"
+                />
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 10px 30px; background-color: #f9fafc;">
+                <h2
+                  style="border-bottom: 1px solid gray; padding-bottom: 30px; color: #111;"
+                >
+                  Alert "{{alertName}}" Triggered
+                </h2>
+                <p style="color: #333; font-size: 15px;">
+                  The following batches will expire within
+                  <b>{{daysBefore}}</b>
+                  days:
+                </p>
+
+                <table
+                  border="1"
+                  cellspacing="0"
+                  cellpadding="8"
+                  style="border-collapse: collapse; width: 100%;"
+                >
+                  <thead style="background-color: #f4f4f4;">
+                    <tr>
+                      <th align="left">Product</th>
+                      <th align="left">Batch №</th>
+                      <th align="left">Expiration Date</th>
+                      <th align="right">Quantity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each batches}}
+                      <tr>
+                        <td>{{this.productName}}</td>
+                        <td>{{this.batchNumber}}</td>
+                        <td>{{this.expirationDate}}</td>
+                        <td align="right">{{this.totalQty}}</td>
+                      </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+
+                <p style="margin-top: 20px; color: #555;">
+                  Please review your inventory in time to avoid product
+                  expiration.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style="background-color: #f3f4f6; padding: 15px 30px; text-align: center; color: #6b7280; font-size: 13px;"
+              >
+                ©
+                {{year}}
+                xPirio Alert System · All rights reserved
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -153,3 +153,33 @@ model ProductForm {
   @@unique([formId, productId])
   @@map("product_forms")
 }
+
+model Alert {
+  id         Int     @id @default(autoincrement())
+  name       String
+  daysBefore Int     @map("days_before")
+  isEnabled  Boolean @default(true) @map("is_enabled")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  channels AlertChannel[]
+
+  @@map("alerts")
+}
+
+enum AlertType {
+  EMAIL
+  SMS
+  PUSH
+}
+
+model AlertChannel {
+  id   Int       @id @default(autoincrement())
+  type AlertType
+
+  alert   Alert @relation(fields: [alertId], references: [id])
+  alertId Int   @map("alert_id")
+
+  @@map("alert_channels")
+}

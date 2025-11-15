@@ -14,10 +14,13 @@ import { DrugFormModule } from "./modules/drug-form/drug-form.module";
 import { StoragesModule } from "./modules/storages/storages.module";
 import { ProductModule } from "./modules/product/product.module";
 import { BatchModule } from "./modules/batch/batch.module";
+import { AlertsModule } from "./modules/alert/alert.module";
+import { ScheduleModule, Cron } from "@nestjs/schedule";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     AuthModule,
     UserModule,
@@ -29,6 +32,7 @@ import { BatchModule } from "./modules/batch/batch.module";
     StoragesModule,
     ProductModule,
     BatchModule,
+    AlertsModule,
   ],
   controllers: [],
   providers: [
