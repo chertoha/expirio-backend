@@ -13,35 +13,47 @@ import { BatchService } from "./batch.service";
 import { CreateBatchDto } from "./dto/create-batch.dto";
 import { UpdateBatchDto } from "./dto/update-batch.dto";
 import { FindBatchesQueryDto } from "./dto/find-batches-query.dto";
+import { RelocateBatchDto } from "./dto/relocate-batch.dto";
+import { WriteOffBatchDto } from "./dto/write-off-batch.dto";
 @Controller("batches")
 export class BatchController {
-  constructor(private readonly BatchService: BatchService) {}
+  constructor(private readonly batchService: BatchService) {}
 
   @Post()
-  create(@Body() CreateBatchDto: CreateBatchDto) {
-    return this.BatchService.create(CreateBatchDto);
+  async create(@Body() CreateBatchDto: CreateBatchDto) {
+    return await this.batchService.create(CreateBatchDto);
   }
 
   @Get()
   async findAll(@Query() query: FindBatchesQueryDto) {
-    return this.BatchService.findAll(query);
+    return await this.batchService.findAll(query);
   }
 
   @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.BatchService.findOne(id);
+  async findOne(@Param("id", ParseIntPipe) id: number) {
+    return await this.batchService.findOne(id);
   }
 
   @Put(":id")
-  update(
+  async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() UpdateBatchDto: UpdateBatchDto,
   ) {
-    return this.BatchService.update(id, UpdateBatchDto);
+    return await this.batchService.update(id, UpdateBatchDto);
   }
 
   @Delete(":id")
   remove(@Param("id", ParseIntPipe) id: number) {
-    return this.BatchService.remove(id);
+    return this.batchService.remove(id);
+  }
+
+  @Post("relocate")
+  async relocate(@Body() relocateBatchDto: RelocateBatchDto) {
+    return await this.batchService.relocate(relocateBatchDto);
+  }
+
+  @Post("write-off")
+  async writeOff(@Body() writeOffBatchDto: WriteOffBatchDto) {
+    return await this.batchService.writeOff(writeOffBatchDto);
   }
 }
