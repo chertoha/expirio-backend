@@ -86,9 +86,11 @@ model Storage {
 model Batch {
   id Int @id @default(autoincrement())
 
-  batchNumber     String   @unique @map("batch_number")
-  description     String?
-  // qty             Int
+  batchNumber   String    @unique @map("batch_number")
+  description   String?
+  isActive      Boolean   @default(true) @map("is_active")
+  deactivatedAt DateTime?
+
   manufactureDate DateTime @map("manufacture_date")
   expirationDate  DateTime @map("expiration_date")
 

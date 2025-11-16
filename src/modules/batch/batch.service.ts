@@ -11,6 +11,8 @@ import { PageableService } from "../pageable/pageable.service";
 import { StoragesService } from "../storages/storages.service";
 import { FindBatchesQueryDto } from "./dto/find-batches-query.dto";
 import { Prisma } from "@prisma/client";
+import { RelocateBatchDto } from "./dto/relocate-batch.dto";
+import { WriteOffBatchDto } from "./dto/write-off-batch.dto";
 
 const include = {
   product: { include: { categories: { include: { category: true } } } },
@@ -63,6 +65,7 @@ export class BatchService {
     const { expired } = dto;
 
     const where: Prisma.BatchWhereInput = {
+      isActive: true,
       ...(expired === true && {
         expirationDate: { lte: new Date() },
       }),
@@ -130,21 +133,144 @@ export class BatchService {
 
   async remove(id: number) {
     await this.findByIdOrThrow(id);
-
-    const assignedStorages = await this.prisma.storageBatch.findMany({
-      where: { batchId: id },
-    });
-
-    if (assignedStorages.length > 0) {
-      throw new ConflictException(
-        `Cannot delete batch. It is assigned to storages: ${assignedStorages
-          .map(s => s.storageId)
-          .join(", ")}`,
-      );
-    }
-
+    await this.throwIfHasAssignedStorages(id);
     return await this.prisma.batch.delete({ where: { id } });
   }
+
+  async relocate(relocateBatchDto: RelocateBatchDto) {
+    const { batchId, currentStorageId, nextStorageId, relocatedQty } =
+      relocateBatchDto;
+
+    const currentStorageBatch = await this.findStorageBatchOrThrow(
+      batchId,
+      currentStorageId,
+    );
+
+    await this.storageService.findByIdOrThrow(nextStorageId);
+
+    if (currentStorageId === nextStorageId) {
+      throw new ConflictException("Cannot relocate batch to the same storage");
+    }
+
+    if (relocatedQty > currentStorageBatch.qty)
+      throw new ConflictException(
+        "Quantity for relocation cannot be more than total batch quantity",
+      );
+
+    const balance = currentStorageBatch.qty - relocatedQty;
+
+    return await this.prisma.$transaction(async t => {
+      let prev = {};
+
+      const next = await this.updateOrCreateStorageBatch(
+        nextStorageId,
+        batchId,
+        relocatedQty,
+        t,
+      );
+
+      if (balance === 0) {
+        await t.storageBatch.delete({
+          where: {
+            storageId_batchId: { storageId: currentStorageId, batchId },
+          },
+        });
+      } else {
+        prev = await t.storageBatch.update({
+          where: {
+            storageId_batchId: { storageId: currentStorageId, batchId },
+          },
+          data: { qty: balance },
+        });
+      }
+
+      return { prev, next };
+    });
+  }
+
+  async writeOff(writeOffBatchDto: WriteOffBatchDto) {
+    const { storageId, batchId, qty } = writeOffBatchDto;
+
+    const currentStorageBatch = await this.findStorageBatchOrThrow(
+      batchId,
+      storageId,
+    );
+
+    if (qty > currentStorageBatch.qty)
+      throw new ConflictException(
+        "Quantity for write off cannot be more than total batch quantity",
+      );
+
+    const balance = currentStorageBatch.qty - qty;
+
+    if (balance === 0) {
+      await this.prisma.storageBatch.delete({
+        where: { storageId_batchId: { storageId, batchId } },
+      });
+      await this.deactivateBatch(batchId);
+      return {};
+    }
+
+    return await this.prisma.storageBatch.update({
+      where: { storageId_batchId: { storageId, batchId } },
+      data: { qty: balance },
+    });
+  }
+
+  async deactivateBatch(id: number) {
+    await this.findByIdOrThrow(id);
+    await this.throwIfHasAssignedStorages(id);
+
+    return await this.prisma.batch.update({
+      where: { id },
+      data: { isActive: false, deactivatedAt: new Date() },
+    });
+  }
+
+  private async updateOrCreateStorageBatch(
+    storageId: number,
+    batchId: number,
+    qty: number,
+    t?: Prisma.TransactionClient,
+  ) {
+    const prisma = t ? t : this.prisma;
+
+    const existing = await prisma.storageBatch.findUnique({
+      where: { storageId_batchId: { storageId, batchId } },
+    });
+
+    if (existing) {
+      return await prisma.storageBatch.update({
+        where: { storageId_batchId: { storageId, batchId } },
+        data: { qty: existing.qty + qty },
+      });
+    }
+
+    return await prisma.storageBatch.create({
+      data: { storageId, batchId, qty },
+    });
+  }
+
+  async throwIfHasAssignedStorages(batchId: number): Promise<void> {
+    const assignedCount = await this.prisma.storageBatch.count({
+      where: { batchId },
+    });
+    if (assignedCount > 0) {
+      throw new ConflictException(
+        "Cannot deactivate batch. It is still assigned to storages",
+      );
+    }
+  }
+
+  // private async findOrCreateStorageBatch(batchId: number, storageId: number) {
+  //   const existing = await this.prisma.storageBatch.findUnique({
+  //     where: { storageId_batchId: { batchId, storageId } },
+  //   });
+
+  //   if (existing) return existing;
+
+  //   return await this.prisma.storageBatch.create({})
+  // }
 
   private async findByIdOrThrow(id: number) {
     const batch = await this.prisma.batch.findUnique({
@@ -159,17 +285,6 @@ export class BatchService {
   }
 
   private async throwIfBatchNumberExists(batchNumber: string, selfId?: number) {
-    // const existing = await this.prisma.batch.findFirst({
-    //   where: selfId
-    //     ? {
-    //         batchNumber,
-    //         NOT: { id: selfId },
-    //       }
-    //     : {
-    //         batchNumber,
-    //       },
-    // });
-
     const existing = await this.prisma.batch.findUnique({
       where: { batchNumber, NOT: { id: selfId } },
     });
@@ -197,5 +312,7 @@ export class BatchService {
     });
 
     if (!existing) throw new NotFoundException("Batch Storage not found");
+
+    return existing;
   }
 }
