@@ -3,10 +3,11 @@ import { PrismaService } from "../database/prisma.service";
 import { CreateAlertDto } from "./dto/create-alert.dto";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { NodemailerEmailStrategy } from "./strategies/email.strategy";
+import { SetEnableAlertDto } from "./dto/set-enable-alert.dto";
 
 @Injectable()
-export class AlertsService {
-  private readonly logger = new Logger(AlertsService.name);
+export class AlertService {
+  private readonly logger = new Logger(AlertService.name);
 
   constructor(
     private readonly prisma: PrismaService,
@@ -28,12 +29,26 @@ export class AlertsService {
   }
 
   async findAll() {
-    return await this.prisma.alert.findMany({ include: { channels: true } });
+    return await this.prisma.alert.findMany({
+      orderBy: { createdAt: "asc" },
+      include: { channels: true },
+    });
   }
 
   async remove(id: number) {
     await this.findByIdOrThrow(id);
     return await this.prisma.alert.delete({ where: { id } });
+  }
+
+  async enable(id: number, setEnableAlertDto: SetEnableAlertDto) {
+    const { isEnabled } = setEnableAlertDto;
+
+    await this.findByIdOrThrow(id);
+
+    return await this.prisma.alert.update({
+      where: { id },
+      data: { isEnabled },
+    });
   }
 
   async findByIdOrThrow(id: number) {

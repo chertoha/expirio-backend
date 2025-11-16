@@ -12,7 +12,7 @@ import {
 import { BatchService } from "./batch.service";
 import { CreateBatchDto } from "./dto/create-batch.dto";
 import { UpdateBatchDto } from "./dto/update-batch.dto";
-import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
+import { FindBatchesQueryDto } from "./dto/find-batches-query.dto";
 @Controller("batches")
 export class BatchController {
   constructor(private readonly BatchService: BatchService) {}
@@ -23,7 +23,7 @@ export class BatchController {
   }
 
   @Get()
-  async findAll(@Query() query: QueryPageOptionsDto) {
+  async findAll(@Query() query: FindBatchesQueryDto) {
     return this.BatchService.findAll(query);
   }
 

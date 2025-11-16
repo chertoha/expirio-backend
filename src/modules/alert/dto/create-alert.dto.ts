@@ -2,7 +2,6 @@ import { AlertType } from "@prisma/client";
 import {
   IsString,
   IsInt,
-  IsBoolean,
   IsEnum,
   IsArray,
   ArrayNotEmpty,
@@ -14,9 +13,6 @@ export class CreateAlertDto {
 
   @IsInt()
   daysBefore: number;
-
-  @IsBoolean()
-  isEnabled?: boolean;
 
   @IsArray()
   @ArrayNotEmpty()

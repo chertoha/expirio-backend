@@ -178,7 +178,7 @@ model AlertChannel {
   id   Int       @id @default(autoincrement())
   type AlertType
 
-  alert   Alert @relation(fields: [alertId], references: [id])
+  alert   Alert @relation(fields: [alertId], references: [id], onDelete: Cascade)
   alertId Int   @map("alert_id")
 
   @@map("alert_channels")

@@ -8,6 +8,7 @@ import { seedStorages } from "./seed-storages";
 import { seedBatches } from "./seed-batches";
 import { seedStorageBatches } from "./seed-storage-batches";
 import { clearDatabase } from "./clear-database";
+import { seedAlerts } from "./seed-alerts";
 
 const prisma = new PrismaClient();
 
@@ -23,6 +24,7 @@ async function main() {
   await seedStorages(prisma);
   await seedBatches(prisma);
   await seedStorageBatches(prisma);
+  await seedAlerts(prisma);
 
   console.log("🌍 Seeding completed!");
 }

@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
-import { AlertsService } from "./alerts.service";
-import { AlertsController } from "./alerts.controller";
+import { AlertService } from "./alert.service";
+import { AlertController } from "./alert.controller";
 import { NodemailerEmailStrategy } from "./strategies/email.strategy";
 
 @Module({
-  controllers: [AlertsController],
-  providers: [AlertsService, NodemailerEmailStrategy],
+  controllers: [AlertController],
+  providers: [AlertService, NodemailerEmailStrategy],
 })
 export class AlertsModule {}

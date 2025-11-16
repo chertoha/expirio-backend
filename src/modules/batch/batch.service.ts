@@ -10,6 +10,8 @@ import { ProductService } from "../product/product.service";
 import { PageableService } from "../pageable/pageable.service";
 import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 import { StoragesService } from "../storages/storages.service";
+import { FindBatchesQueryDto } from "./dto/find-batches-query.dto";
+import { Prisma } from "@prisma/client";
 
 const include = {
   product: { include: { categories: { include: { category: true } } } },
@@ -58,13 +60,21 @@ export class BatchService {
     });
   }
 
-  async findAll(dto: QueryPageOptionsDto) {
+  async findAll(dto: FindBatchesQueryDto) {
+    const { expired } = dto;
+
+    const where: Prisma.BatchWhereInput = {
+      ...(expired === true && {
+        expirationDate: { lte: new Date() },
+      }),
+    };
+
     return this.pageableService.findAll(
       "batch",
       dto,
-      {},
+      where,
       include,
-      "batchNumber", // searchField
+      "batchNumber",
     );
   }
 
