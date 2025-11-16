@@ -8,7 +8,6 @@ import { UpdateBatchDto } from "./dto/update-batch.dto";
 import { PrismaService } from "../database/prisma.service";
 import { ProductService } from "../product/product.service";
 import { PageableService } from "../pageable/pageable.service";
-import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 import { StoragesService } from "../storages/storages.service";
 import { FindBatchesQueryDto } from "./dto/find-batches-query.dto";
 import { Prisma } from "@prisma/client";
