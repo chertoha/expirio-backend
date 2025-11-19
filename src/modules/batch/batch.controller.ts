@@ -15,6 +15,7 @@ import { UpdateBatchDto } from "./dto/update-batch.dto";
 import { FindBatchesQueryDto } from "./dto/find-batches-query.dto";
 import { RelocateBatchDto } from "./dto/relocate-batch.dto";
 import { WriteOffBatchDto } from "./dto/write-off-batch.dto";
+import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 @Controller("batches")
 export class BatchController {
   constructor(private readonly batchService: BatchService) {}
@@ -27,6 +28,11 @@ export class BatchController {
   @Get()
   async findAll(@Query() query: FindBatchesQueryDto) {
     return await this.batchService.findAll(query);
+  }
+
+  @Get("/storage-batch")
+  async findStorageBatch(@Query() query: QueryPageOptionsDto) {
+    return await this.batchService.findStorageBatches(query);
   }
 
   @Get(":id")

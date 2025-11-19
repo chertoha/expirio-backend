@@ -13,6 +13,8 @@ import { FindBatchesQueryDto } from "./dto/find-batches-query.dto";
 import { Prisma } from "@prisma/client";
 import { RelocateBatchDto } from "./dto/relocate-batch.dto";
 import { WriteOffBatchDto } from "./dto/write-off-batch.dto";
+import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
+import { PageableDto } from "../pageable/dto/pageable.dto";
 
 const include = {
   product: { include: { categories: { include: { category: true } } } },
@@ -78,6 +80,41 @@ export class BatchService {
       include,
       "batchNumber",
     );
+  }
+
+  async findStorageBatches(dto: QueryPageOptionsDto) {
+    const where: Prisma.StorageBatchWhereInput = {};
+    const storageBatchInclude: Prisma.StorageBatchInclude = {
+      batch: {
+        include: {
+          product: { include: { categories: { include: { category: true } } } },
+          storages: {
+            include: { storage: true },
+          },
+        },
+      },
+      storage: true,
+    };
+
+    const page = Number(dto.page) || 1;
+    const limit = Number(dto.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [data, totalElements] = await Promise.all([
+      this.prisma.storageBatch.findMany({
+        skip,
+        take: limit,
+        where,
+        // orderBy,
+        include: storageBatchInclude,
+      }),
+      this.prisma.storageBatch.count({ where }),
+    ]);
+
+    return new PageableDto(data, {
+      totalElements,
+      options: { ...dto, page, limit, skip },
+    });
   }
 
   async findOne(id: number) {
