@@ -12,7 +12,7 @@ export class PageableService {
     dto: QueryPageOptionsDto,
     where?: object,
     include?: object,
-    searchField: string = "name", // додатковий параметр для пошуку по іншому полю
+    searchField: string = "name",
   ) {
     const page = Number(dto.page) || 1;
     const limit = Number(dto.limit) || 10;

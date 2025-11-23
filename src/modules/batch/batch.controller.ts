@@ -7,7 +7,9 @@ import {
   Delete,
   ParseIntPipe,
   Query,
-  Put,
+  Patch,
+  UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
 import { BatchService } from "./batch.service";
 import { CreateBatchDto } from "./dto/create-batch.dto";
@@ -16,6 +18,9 @@ import { FindBatchesQueryDto } from "./dto/find-batches-query.dto";
 import { RelocateBatchDto } from "./dto/relocate-batch.dto";
 import { WriteOffBatchDto } from "./dto/write-off-batch.dto";
 import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
+import { DeleteStorageBatchDto } from "./dto/delete-storage-batch.dto";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { ApiConsumes } from "@nestjs/swagger";
 @Controller("batches")
 export class BatchController {
   constructor(private readonly batchService: BatchService) {}
@@ -23,6 +28,14 @@ export class BatchController {
   @Post()
   async create(@Body() CreateBatchDto: CreateBatchDto) {
     return await this.batchService.create(CreateBatchDto);
+  }
+
+  @Post("/import-excel")
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiConsumes("multipart/form-data")
+  async importExcel(@UploadedFile() file: Express.Multer.File) {
+    const result = await this.batchService.importFromExcel(file);
+    return result;
   }
 
   @Get()
@@ -35,12 +48,19 @@ export class BatchController {
     return await this.batchService.findStorageBatches(query);
   }
 
+  @Delete("/storage-batch")
+  async deleteStorageBatch(
+    @Body() deleteStorageBatchDto: DeleteStorageBatchDto,
+  ) {
+    return await this.batchService.deleteStorageBatch(deleteStorageBatchDto);
+  }
+
   @Get(":id")
   async findOne(@Param("id", ParseIntPipe) id: number) {
     return await this.batchService.findOne(id);
   }
 
-  @Put(":id")
+  @Patch(":id")
   async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() UpdateBatchDto: UpdateBatchDto,
