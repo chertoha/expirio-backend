@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -10,11 +11,34 @@ import { ProductService } from "../product/product.service";
 import { PageableService } from "../pageable/pageable.service";
 import { StoragesService } from "../storages/storages.service";
 import { FindBatchesQueryDto } from "./dto/find-batches-query.dto";
-import { Prisma } from "@prisma/client";
+import { ActiveIngredient, Batch, Prisma, Product } from "@prisma/client";
 import { RelocateBatchDto } from "./dto/relocate-batch.dto";
 import { WriteOffBatchDto } from "./dto/write-off-batch.dto";
 import { QueryPageOptionsDto } from "../pageable/dto/query-options.dto";
 import { PageableDto } from "../pageable/dto/pageable.dto";
+import { DeleteStorageBatchDto } from "./dto/delete-storage-batch.dto";
+import { throwIfEndDateSooner } from "src/helpers/date";
+import { BatchStatus } from "src/types/common";
+import {
+  BATCH_EXPIRING_SOON_PERIOD,
+  BATCH_IMPORT_REQUIRED_COLUMNS,
+} from "src/config/constants";
+import * as XLSX from "xlsx";
+import { isDateString } from "class-validator";
+
+type BatchExcelColumn = {
+  batchNumber: string;
+  product: string;
+  barcode: string;
+  dosage: number;
+  dosageUnit: string;
+  activeIngredient: string;
+  qty: number;
+  manufactureDate: string;
+  expirationDate: string;
+  storage: string;
+  [key: string]: any;
+};
 
 const include = {
   product: { include: { categories: { include: { category: true } } } },
@@ -44,6 +68,7 @@ export class BatchService {
     await this.throwIfBatchNumberExists(batchNumber);
     await this.productService.findByIdOrThrow(productId);
     await this.storageService.findByIdOrThrow(storageId);
+    throwIfEndDateSooner(new Date(manufactureDate), new Date(expirationDate));
 
     return await this.prisma.batch.create({
       data: {
@@ -64,13 +89,36 @@ export class BatchService {
   }
 
   async findAll(dto: FindBatchesQueryDto) {
-    const { expired } = dto;
+    const { search, status, productId, categoryId, storageId } = dto;
+
+    const today = new Date();
+    const soon = new Date(today);
+    soon.setDate(soon.getDate() + BATCH_EXPIRING_SOON_PERIOD);
 
     const where: Prisma.BatchWhereInput = {
       isActive: true,
-      ...(expired === true && {
-        expirationDate: { lte: new Date() },
+
+      ...(search && {
+        batchNumber: { contains: search, mode: "insensitive" },
       }),
+
+      ...(status === BatchStatus.EXPIRED && {
+        expirationDate: { lt: today },
+      }),
+
+      ...(status === BatchStatus.EXPIRING_SOON && {
+        expirationDate: { gte: today, lte: soon },
+      }),
+
+      ...(status === BatchStatus.ACTIVE && {
+        expirationDate: { gt: soon },
+      }),
+
+      ...(productId && { productId }),
+
+      ...(categoryId && { product: { categories: { some: { categoryId } } } }),
+
+      ...(storageId && { storages: { some: { storageId } } }),
     };
 
     return this.pageableService.findAll(
@@ -122,56 +170,24 @@ export class BatchService {
   }
 
   async update(id: number, updateBatchDto: UpdateBatchDto) {
-    const {
-      batchNumber,
-      description,
-      manufactureDate,
-      expirationDate,
-      productId,
-      qty,
-      oldStorageId,
-      storageId,
-    } = updateBatchDto;
+    const { productId, batchNumber, manufactureDate, expirationDate } =
+      updateBatchDto;
 
     await this.findByIdOrThrow(id);
     await this.throwIfBatchNumberExists(batchNumber, id);
     await this.productService.findByIdOrThrow(productId);
-    await this.storageService.findByIdOrThrow(storageId);
-    await this.storageService.findByIdOrThrow(oldStorageId);
-    await this.findStorageBatchOrThrow(id, oldStorageId);
-    await this.throwIfStorageBatchExists(id, storageId);
+    throwIfEndDateSooner(new Date(manufactureDate), new Date(expirationDate));
 
-    return await this.prisma.$transaction(async t => {
-      await t.storageBatch.delete({
-        where: { storageId_batchId: { batchId: id, storageId: oldStorageId } },
-      });
-
-      return await t.batch.update({
-        where: { id },
-        data: {
-          batchNumber,
-          description,
-          manufactureDate: new Date(manufactureDate),
-          expirationDate: new Date(expirationDate),
-
-          product: { connect: { id: productId } },
-
-          storages: {
-            create: {
-              storage: { connect: { id: storageId } },
-              qty: qty,
-            },
-          },
-        },
-        include,
-      });
-    });
+    return this.prisma.batch.update({ where: { id }, data: updateBatchDto });
   }
 
   async remove(id: number) {
     await this.findByIdOrThrow(id);
-    await this.throwIfHasAssignedStorages(id);
-    return await this.prisma.batch.delete({ where: { id } });
+
+    await this.prisma.$transaction([
+      this.prisma.storageBatch.deleteMany({ where: { batchId: id } }),
+      this.prisma.batch.delete({ where: { id } }),
+    ]);
   }
 
   async relocate(relocateBatchDto: RelocateBatchDto) {
@@ -254,6 +270,26 @@ export class BatchService {
     });
   }
 
+  async deleteStorageBatch(deleteStorageBatchDto: DeleteStorageBatchDto) {
+    const { storageId, batchId } = deleteStorageBatchDto;
+
+    await this.findStorageBatchOrThrow(batchId, storageId);
+
+    const deleted = await this.prisma.storageBatch.delete({
+      where: { storageId_batchId: { storageId, batchId } },
+    });
+
+    const existing = await this.prisma.storageBatch.findMany({
+      where: { batchId },
+    });
+
+    if (!existing.length) {
+      await this.deactivateBatch(batchId);
+    }
+
+    return deleted;
+  }
+
   async deactivateBatch(id: number) {
     await this.findByIdOrThrow(id);
     await this.throwIfHasAssignedStorages(id);
@@ -288,6 +324,141 @@ export class BatchService {
     });
   }
 
+  async importFromExcel(file: Express.Multer.File) {
+    if (!file) throw new BadRequestException("Excel file is required");
+
+    if (
+      !file.originalname.endsWith(".xlsx") &&
+      !file.originalname.endsWith(".xls")
+    ) {
+      throw new BadRequestException("File must be an Excel (.xlsx or .xls)");
+    }
+
+    const parseExcel = (buffer: Buffer) =>
+      new Promise<{ headers: string[]; rows: BatchExcelColumn[] }>(
+        (resolve, reject) => {
+          try {
+            const workbook = XLSX.read(buffer, { type: "buffer" });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+            const headers = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1,
+            })[0] as string[];
+
+            const rows = XLSX.utils.sheet_to_json<BatchExcelColumn>(worksheet);
+
+            resolve({ headers, rows });
+          } catch (err) {
+            reject(new Error(String(err)));
+          }
+        },
+      );
+
+    const { headers, rows } = await parseExcel(file.buffer);
+
+    const allowedHeaders = BATCH_IMPORT_REQUIRED_COLUMNS.every(h =>
+      headers.includes(h),
+    );
+    if (!allowedHeaders) throw new BadRequestException("Wrong headers");
+
+    if (!rows.length) return { message: "No rows found in file" };
+
+    return await this.prisma.$transaction(async t => {
+      const resultBatches: Batch[] = [];
+
+      for (const row of rows) {
+        const rowBatchNumber = row.batchNumber.trim();
+        const rowProduct = row.product.trim();
+        const rowBarcode = String(row.barcode).trim();
+        const rowDosage = row.dosage;
+        const rowDosageUnit = row.dosageUnit.trim();
+        const rowActiveIngredient = row.activeIngredient.trim();
+        const rowQty = row.qty;
+        const rowManufactureDate = row.manufactureDate;
+        const rowExpirationDate = row.expirationDate;
+        const rowStorage = row.storage.trim();
+
+        if (!isDateString(rowManufactureDate))
+          throw new BadRequestException("Wrong manufacturing date format");
+
+        if (!isDateString(rowExpirationDate))
+          throw new BadRequestException("Wrong expiration date format");
+
+        throwIfEndDateSooner(
+          new Date(rowManufactureDate),
+          new Date(rowExpirationDate),
+        );
+
+        let activeIngredient: ActiveIngredient | null = null;
+        activeIngredient = await t.activeIngredient.findUnique({
+          where: { name: rowActiveIngredient },
+        });
+        if (!activeIngredient) {
+          activeIngredient = await t.activeIngredient.create({
+            data: { name: rowActiveIngredient },
+          });
+        }
+
+        const dosageUnit = await t.dosageUnit.findUnique({
+          where: { name: rowDosageUnit },
+        });
+        if (!dosageUnit)
+          throw new NotFoundException(
+            `Dosage unit '${rowDosageUnit}' not found`,
+          );
+
+        let product: Product | null = null;
+        product = await t.product.findUnique({ where: { name: rowProduct } });
+        if (!product) {
+          product = await t.product.create({
+            data: {
+              name: rowProduct,
+              barcode: rowBarcode,
+              dosage: rowDosage,
+              activeIngredientId: activeIngredient.id,
+              dosageUnitId: dosageUnit.id,
+            },
+          });
+        }
+        if (rowBarcode !== product.barcode)
+          throw new BadRequestException(`Wrong barcode ${rowBarcode}`);
+
+        const storage = await t.storage.findUnique({
+          where: { name: rowStorage },
+        });
+        if (!storage)
+          throw new NotFoundException(`Storage '${rowStorage}' not found`);
+
+        let batch = await t.batch.findUnique({
+          where: { batchNumber: rowBatchNumber },
+        });
+        if (batch)
+          throw new ConflictException(
+            `Batch number ${rowBatchNumber} already exists`,
+          );
+
+        batch = await t.batch.create({
+          data: {
+            batchNumber: rowBatchNumber,
+            manufactureDate: new Date(rowManufactureDate),
+            expirationDate: new Date(rowExpirationDate),
+            product: { connect: { id: product.id } },
+            storages: {
+              create: {
+                storage: { connect: { id: storage.id } },
+                qty: rowQty,
+              },
+            },
+          },
+        });
+
+        resultBatches.push(batch);
+      }
+
+      return resultBatches;
+    });
+  }
+
   async throwIfHasAssignedStorages(batchId: number): Promise<void> {
     const assignedCount = await this.prisma.storageBatch.count({
       where: { batchId },
@@ -298,16 +469,6 @@ export class BatchService {
       );
     }
   }
-
-  // private async findOrCreateStorageBatch(batchId: number, storageId: number) {
-  //   const existing = await this.prisma.storageBatch.findUnique({
-  //     where: { storageId_batchId: { batchId, storageId } },
-  //   });
-
-  //   if (existing) return existing;
-
-  //   return await this.prisma.storageBatch.create({})
-  // }
 
   private async findByIdOrThrow(id: number) {
     const batch = await this.prisma.batch.findUnique({
@@ -322,7 +483,7 @@ export class BatchService {
   }
 
   private async throwIfBatchNumberExists(batchNumber: string, selfId?: number) {
-    const existing = await this.prisma.batch.findUnique({
+    const existing = await this.prisma.batch.findFirst({
       where: { batchNumber, NOT: { id: selfId } },
     });
 

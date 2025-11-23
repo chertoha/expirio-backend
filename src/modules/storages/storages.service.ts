@@ -6,6 +6,7 @@ import {
 import { CreateStorageDto } from "./dto/create-storage.dto";
 import { UpdateStorageDto } from "./dto/update-storage.dto";
 import { PrismaService } from "../database/prisma.service";
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class StoragesService {
@@ -20,8 +21,13 @@ export class StoragesService {
     });
   }
 
-  async findAll() {
-    const storages = await this.prisma.storage.findMany({
+  async findAll(
+    where?: Prisma.StorageWhereInput,
+    t?: Prisma.TransactionClient,
+  ) {
+    const prisma = t ? t : this.prisma;
+    const storages = await prisma.storage.findMany({
+      where,
       include: { batches: true },
     });
 
