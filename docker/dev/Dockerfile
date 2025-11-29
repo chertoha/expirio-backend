@@ -37,7 +37,10 @@
     # COPY --from=builder /app/public ./public
 
     # Installation of only production depending
-    RUN npm install
+    RUN yarn install --production
+
+    # Installation of a variable environment
+    ENV NODE_ENV=production
 
     COPY docker/dev/entrypoint.sh /entrypoint.sh
     RUN chmod +x /entrypoint.sh

@@ -24,7 +24,7 @@ async function bootstrap() {
 
   const PORT = process.env.PORT ?? 9000;
 
-  await app.listen(PORT, () =>
+  await app.listen(PORT, "0.0.0.0", () =>
     console.log(`\x1b[34mServer started on port = ${PORT}\x1b[0m`),
   );
 }
