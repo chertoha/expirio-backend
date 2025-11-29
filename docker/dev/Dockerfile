@@ -37,7 +37,7 @@
     # COPY --from=builder /app/public ./public
 
     # Installation of only production depending
-    RUN yarn install --production
+    RUN npm install --production
 
     # Installation of a variable environment
     ENV NODE_ENV=production
