@@ -28,6 +28,7 @@ export class StoragesService {
     const prisma = t ? t : this.prisma;
     const storages = await prisma.storage.findMany({
       where,
+      orderBy: { id: "asc" },
       include: { batches: true },
     });
 

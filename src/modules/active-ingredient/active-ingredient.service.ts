@@ -24,7 +24,7 @@ export class ActiveIngredientService {
 
   async findAll() {
     return this.prisma.activeIngredient.findMany({
-      orderBy: { id: "asc" },
+      orderBy: { name: "asc" },
     });
   }
 
